@@ -102,7 +102,16 @@ public class PaginatedRecyclerView extends RecyclerView {
     }
 
     public void setPagination(Pagination pagination) {
+        setPagination(pagination, true);
+    }
+
+    public void setPagination(Pagination pagination, boolean startOnLoad) {
         this.pagination = pagination;
+        if (startOnLoad) {
+            pagination.onLoadMore(pagination.position);
+            pagination.position++;
+        }
+
         addOnScrollListener(mOnScrollListener);
         if (loadingEnabled) {
             // Wrap existing adapter with new adapter that will add loading row
@@ -148,7 +157,8 @@ public class PaginatedRecyclerView extends RecyclerView {
         if ((totalItemCount - visibleItemCount) <= (firstVisibleItemPosition + loadingThreshold) || totalItemCount == 0) {
             // Call load more only if loading is not currently in progress and if there is more items to load
             if (!pagination.isLoading() && !pagination.hasLoadedAllItems()) {
-                pagination.onLoadMore();
+                pagination.onLoadMore(pagination.position);
+                pagination.position++;
             }
         }
     }
@@ -176,15 +186,13 @@ public class PaginatedRecyclerView extends RecyclerView {
 
     public static abstract class Pagination {
 
-        public abstract void onLoadMore();
+        private int position = 1;
+
+        public abstract void onLoadMore(int position);
 
         public abstract boolean isLoading();
 
         public abstract boolean hasLoadedAllItems();
-
-        public Pagination() {
-            
-        }
 
         @NonNull
         public LoadingListItemCreator getLoadingListItemCreator() {

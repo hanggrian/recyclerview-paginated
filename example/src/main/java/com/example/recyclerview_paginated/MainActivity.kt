@@ -3,9 +3,9 @@ package com.example.recyclerview_paginated
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.view.View
-import android.view.ViewGroup
+import com.hendraanggrian.widget.PaginatedRecyclerView
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 
 /**
@@ -13,31 +13,39 @@ import kotlinx.android.synthetic.main.activity_main.*
  */
 class MainActivity : AppCompatActivity() {
 
+    val adapter = PostAdapter(this)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = null
-        recyclerView.pagination = null
-    }
+        recyclerView.adapter = adapter
+        recyclerView.pagination = object : PaginatedRecyclerView.Pagination() {
+            var loading: Boolean = true
 
-    class Adapter : RecyclerView.Adapter<Adapter.ViewHolder>() {
-        override fun getItemCount(): Int {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
+            override fun onLoadMore(position: Int) {
+                loading = true
+                TypicodeServices.create(Typicode::class.java)
+                        .posts(position)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe({ post ->
+                            loading = false
+                            adapter.add(post)
+                        }, {
+                            loading = false
+                        })
+            }
 
-        override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
+            override fun isLoading(): Boolean {
+                return loading
+            }
 
-        override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        class ViewHolder(itemView: View?) : RecyclerView.ViewHolder(itemView) {
-
+            override fun hasLoadedAllItems(): Boolean {
+                return adapter.size() >= 50
+            }
         }
     }
 }
