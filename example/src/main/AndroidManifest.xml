@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.example.recyclerview_paginated">
+<manifest
+    package="com.example.recyclerview_paginated"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
         android:allowBackup="true"
@@ -17,5 +18,4 @@
             </intent-filter>
         </activity>
     </application>
-
 </manifest>

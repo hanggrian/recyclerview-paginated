@@ -1,1 +1,3 @@
-# recyclerview-paginable
+PaginatedRecyclerView
+=====================
+Work in progress.

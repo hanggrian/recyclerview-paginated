@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="PaginatedRecyclerViewStyle">
+        <attr name="paginatedRecyclerViewStyle" format="reference"/>
+    </declare-styleable>
+
+    <declare-styleable name="PaginatedRecyclerView">
+        <attr name="loadingEnabled" format="integer"/>
+        <attr name="loadingThreshold" format="integer"/>
+    </declare-styleable>
+</resources>
