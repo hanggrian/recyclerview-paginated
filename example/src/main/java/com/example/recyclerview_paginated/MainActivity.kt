@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onLoadMore(page: Int) {
                     loading = true
-                    TypicodeServices.create(Typicode::class.java)
+                    TypicodeServices.create()
                             .posts(page)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())

@@ -24,8 +24,8 @@ dependencies {
 publish {
     userOrg = bintray.user
     groupId = bintray.group
-    artifactId = bintray.artifact.recyclerview_expandable.id
+    artifactId = bintray.artifact.recyclerview_paginated.id
     publishVersion = versions.release
-    desc = bintray.artifact.recyclerview_expandable.desc
-    website = bintray.artifact.recyclerview_expandable.website
+    desc = bintray.artifact.recyclerview_paginated.desc
+    website = bintray.artifact.recyclerview_paginated.website
 }

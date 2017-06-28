@@ -1,6 +1,6 @@
 PaginatedRecyclerView
 =====================
-Work in progress.
+Customizable pagination in Android RecyclerView.
 
 ![demo_list][demo_list] ![demo_grid][demo_grid]
 
@@ -23,8 +23,20 @@ It has several attributes:
 #### Create `Pagination`
 ```java
 public class PostPagination extends PaginatedRecyclerView.Pagination {
-
+    @Override
+    public void onLoadMode(int page) {
+        ...
+    }
     
+    @Override
+    public boolean isLoading(int page) {
+        ...
+    }
+    
+    @Override
+    public boolean isFinished(int page) {
+        ...
+    }
 }
 ```
 
@@ -69,7 +81,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.hendraanggrian:recyclerview-paginated:X.X.X'
+    compile 'com.hendraanggrian:recyclerview-paginated:0.1.0'
 }
 ```
 

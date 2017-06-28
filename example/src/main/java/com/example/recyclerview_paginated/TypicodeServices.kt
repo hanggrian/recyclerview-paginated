@@ -1,10 +1,13 @@
 package com.example.recyclerview_paginated
 
+import io.reactivex.Observable
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
+import retrofit2.http.Path
 
 /**
  * @author Hendra Anggrian (hendraanggrian@gmail.com)
@@ -22,12 +25,18 @@ object TypicodeServices {
             .addConverterFactory(GsonConverterFactory.create())
     private var cache = retrofit.build()
 
-    fun <S> create(serviceClass: Class<S>): S {
+    fun create(): Service {
         if (BuildConfig.DEBUG && !okhttp.interceptors().contains(loggingInterceptor)) {
             okhttp.addInterceptor(loggingInterceptor)
             retrofit.client(okhttp.build())
             cache = retrofit.build()
         }
-        return cache.create(serviceClass)
+        return cache.create(Service::class.java)
+    }
+
+    interface Service {
+
+        @GET("posts/{id}")
+        fun posts(@Path("id") id: Int): Observable<Post>
     }
 }
