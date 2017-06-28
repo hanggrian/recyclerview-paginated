@@ -1,7 +1,9 @@
 package com.example.recyclerview_paginated
 
 import android.os.Bundle
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.*
@@ -17,7 +19,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        fun newPagination(adapter: PostAdapter, useCustomLoadingAdapter: Boolean): PaginatedRecyclerView.Pagination {
+        fun newPagination(adapter: PostAdapter<*>, useCustomLoadingAdapter: Boolean): PaginatedRecyclerView.Pagination {
             return object : PaginatedRecyclerView.Pagination() {
                 var loading: Boolean = true
 
@@ -35,12 +37,12 @@ class MainActivity : AppCompatActivity() {
                             })
                 }
 
-                override fun isLoading(): Boolean {
+                override fun isLoading(page: Int): Boolean {
                     return loading
                 }
 
                 override fun isFinished(page: Int): Boolean {
-                    return page >= 50
+                    return page > 100
                 }
 
                 override fun getLoadingAdapter(): LoadingAdapter<*> {
@@ -54,16 +56,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    val adapter = PostAdapter(this)
+    var toggle = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = adapter
-        recyclerView.pagination = newPagination(adapter, false)
+        populate()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -73,15 +72,32 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.itemToggle -> {
+                toggle = !toggle
+                item.icon = ContextCompat.getDrawable(this, when (toggle) {
+                    true -> R.drawable.ic_view_module_white_24dp
+                    else -> R.drawable.ic_view_list_white_24dp
+                })
+                populate()
+            }
             R.id.itemCustom -> {
-                adapter.clear()
-
                 item.isChecked = !item.isChecked
                 recyclerView.releasePagination()
-                recyclerView.pagination = newPagination(adapter, item.isChecked)
+                populate()
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    fun populate() {
+        if (toggle) {
+            recyclerView.layoutManager = GridLayoutManager(this, 3)
+            recyclerView.adapter = PostAdapterGrid(this)
+        } else {
+            recyclerView.layoutManager = LinearLayoutManager(this)
+            recyclerView.adapter = PostAdapterList(this)
+        }
+        recyclerView.pagination = newPagination(recyclerView.adapter as PostAdapter, false)
     }
 
     class CustomLoadingAdapter : LoadingAdapter<CustomLoadingAdapter.ViewHolder>() {

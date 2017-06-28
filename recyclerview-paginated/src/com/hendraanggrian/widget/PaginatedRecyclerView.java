@@ -23,12 +23,10 @@ public class PaginatedRecyclerView extends RecyclerView {
 
     private static final boolean DEFAULT_LOADING_ENABLED = true;
     private static final int DEFAULT_LOADING_THRESHOLD = 5;
-    private static final int DEFAULT_INITIAL_PAGE = 1;
     private static final boolean DEFAULT_SHOULD_START_ON_LOAD = true;
 
     private boolean loadingEnabled;
     private int loadingThreshold;
-    private int currentPage;
     private boolean shouldStartOnLoad;
 
     @Nullable private Pagination pagination;
@@ -85,7 +83,7 @@ public class PaginatedRecyclerView extends RecyclerView {
 
         private void onAdapterDataChanged() {
             if (paginationAdapter == null || pagination == null) throw new NullPointerException();
-            paginationAdapter.setDisplaying(!pagination.isFinished(currentPage));
+            paginationAdapter.setDisplaying(!pagination.isFinished(pagination.page));
             checkEndOffset();
         }
     };
@@ -103,7 +101,6 @@ public class PaginatedRecyclerView extends RecyclerView {
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.PaginatedRecyclerView, defStyle, 0);
         loadingEnabled = a.getBoolean(R.styleable.PaginatedRecyclerView_loadingEnabled, DEFAULT_LOADING_ENABLED);
         loadingThreshold = a.getInteger(R.styleable.PaginatedRecyclerView_loadingThreshold, DEFAULT_LOADING_THRESHOLD);
-        currentPage = a.getInteger(R.styleable.PaginatedRecyclerView_initialPage, DEFAULT_INITIAL_PAGE);
         shouldStartOnLoad = a.getBoolean(R.styleable.PaginatedRecyclerView_shouldStartOnLoad, DEFAULT_SHOULD_START_ON_LOAD);
         a.recycle();
     }
@@ -129,14 +126,6 @@ public class PaginatedRecyclerView extends RecyclerView {
         this.loadingThreshold = loadingThreshold;
     }
 
-    public int getCurrentPage() {
-        return currentPage;
-    }
-
-    public void setCurrentPage(int currentPage) {
-        this.currentPage = currentPage;
-    }
-
     public boolean isShouldStartOnLoad() {
         return shouldStartOnLoad;
     }
@@ -154,7 +143,7 @@ public class PaginatedRecyclerView extends RecyclerView {
         if (pagination == null) throw new NullPointerException();
         this.pagination = pagination;
         if (shouldStartOnLoad) {
-            pagination.onLoadMore(currentPage++);
+            pagination.onLoadMore(pagination.page++);
         }
 
         addOnScrollListener(paginationOnScrollListener);
@@ -193,6 +182,8 @@ public class PaginatedRecyclerView extends RecyclerView {
             ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(spanSizeLookup);
         }
         pagination = null;
+        paginationAdapter = null;
+        paginationLookup = null;
     }
 
     private void checkEndOffset() {
@@ -216,8 +207,8 @@ public class PaginatedRecyclerView extends RecyclerView {
         if ((totalItemCount - visibleItemCount) <= (firstVisibleItemPosition + loadingThreshold) || totalItemCount == 0) {
             // Call load more only if loading is not currently in progress and if there is more items to load
             if (pagination == null) throw new NullPointerException();
-            if (!pagination.isLoading() && !pagination.isFinished(currentPage)) {
-                pagination.onLoadMore(currentPage++);
+            if (!pagination.isLoading(pagination.page) && !pagination.isFinished(pagination.page)) {
+                pagination.onLoadMore(pagination.page++);
             }
         }
     }
@@ -230,11 +221,21 @@ public class PaginatedRecyclerView extends RecyclerView {
 
     public static abstract class Pagination {
 
+        private int page = 1;
+
         public abstract void onLoadMore(int page);
 
-        public abstract boolean isLoading();
+        public abstract boolean isLoading(int page);
 
         public abstract boolean isFinished(int page);
+
+        public void setPage(int page) {
+            this.page = page;
+        }
+
+        public int getPage(){
+            return page;
+        }
 
         @NonNull
         public LoadingAdapter getLoadingAdapter() {
