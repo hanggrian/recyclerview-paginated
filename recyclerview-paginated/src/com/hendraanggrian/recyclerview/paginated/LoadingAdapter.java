@@ -6,7 +6,7 @@ import android.view.ViewGroup;
 
 /**
  * @author Hendra Anggrian (hendraanggrian@gmail.com)
- * @see PaginatedAdapter
+ * @see PaginationAdapter
  */
 public abstract class LoadingAdapter<VH extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<VH> {
 
@@ -19,16 +19,18 @@ public abstract class LoadingAdapter<VH extends RecyclerView.ViewHolder> extends
         return 0;
     }
 
+    /**
+     * By default, there is no binding for loading row. Override this method otherwise.
+     */
+    @Override
+    public void onBindViewHolder(VH holder, int position) {
+    }
+
     public static final LoadingAdapter DEFAULT = new LoadingAdapter() {
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             return new RecyclerView.ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.loadingadapter_default, parent, false)) {
             };
-        }
-
-        @Override
-        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-            // No binding for default loading row
         }
     };
 }

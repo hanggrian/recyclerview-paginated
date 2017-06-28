@@ -19,7 +19,6 @@ android {
 
 dependencies {
     compile "com.android.support:recyclerview-v7:$versions.support"
-    compile "com.hendraanggrian:support-utils:$versions.utils"
 }
 
 publish {

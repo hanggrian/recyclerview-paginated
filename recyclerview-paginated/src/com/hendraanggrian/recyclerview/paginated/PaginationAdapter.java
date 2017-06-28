@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 /**
  * @author Hendra Anggrian (hendraanggrian@gmail.com)
  */
-public class PaginatedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class PaginationAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int ITEM_VIEW_TYPE_LOADING = Integer.MAX_VALUE - 50; // Magic
 
@@ -15,7 +15,7 @@ public class PaginatedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
     @NonNull private final LoadingAdapter loadingAdapter;
     private boolean isDisplaying = true;
 
-    public PaginatedAdapter(@NonNull RecyclerView.Adapter adapter, @NonNull LoadingAdapter loadingAdapter) {
+    public PaginationAdapter(@NonNull RecyclerView.Adapter adapter, @NonNull LoadingAdapter loadingAdapter) {
         this.originalAdapter = adapter;
         this.loadingAdapter = loadingAdapter;
     }

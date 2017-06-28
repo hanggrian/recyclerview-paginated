@@ -30,10 +30,6 @@ class PostAdapter(val context: Context) : RecyclerView.Adapter<PostAdapter.ViewH
         }
     }
 
-    fun size(): Int {
-        return list.size
-    }
-
     fun add(item: Post) {
         list.add(item)
         notifyItemInserted(list.indexOf(item))

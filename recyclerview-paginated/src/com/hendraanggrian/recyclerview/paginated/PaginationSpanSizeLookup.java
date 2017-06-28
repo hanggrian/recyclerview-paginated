@@ -6,16 +6,16 @@ import android.support.v7.widget.GridLayoutManager;
 /**
  * @author Hendra Anggrian (hendraanggrian@gmail.com)
  */
-public class PaginatedSpanSizeLookup extends GridLayoutManager.SpanSizeLookup {
+public class PaginationSpanSizeLookup extends GridLayoutManager.SpanSizeLookup {
 
     @NonNull private final GridLayoutManager.SpanSizeLookup originalLookup;
     @NonNull private final LoadingSpanSizeLookup loadingLookup;
-    @NonNull private final PaginatedAdapter paginatedAdapter;
+    @NonNull private final PaginationAdapter paginatedAdapter;
 
-    public PaginatedSpanSizeLookup(
+    public PaginationSpanSizeLookup(
             @NonNull GridLayoutManager.SpanSizeLookup gridSpanSizeLookup,
             @NonNull LoadingSpanSizeLookup loadingLookup,
-            @NonNull PaginatedAdapter paginatedAdapter) {
+            @NonNull PaginationAdapter paginatedAdapter) {
         this.originalLookup = gridSpanSizeLookup;
         this.loadingLookup = loadingLookup;
         this.paginatedAdapter = paginatedAdapter;

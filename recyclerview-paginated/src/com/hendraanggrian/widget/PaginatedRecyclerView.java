@@ -12,8 +12,8 @@ import android.util.AttributeSet;
 
 import com.hendraanggrian.recyclerview.paginated.LoadingAdapter;
 import com.hendraanggrian.recyclerview.paginated.LoadingSpanSizeLookup;
-import com.hendraanggrian.recyclerview.paginated.PaginatedAdapter;
-import com.hendraanggrian.recyclerview.paginated.PaginatedSpanSizeLookup;
+import com.hendraanggrian.recyclerview.paginated.PaginationAdapter;
+import com.hendraanggrian.recyclerview.paginated.PaginationSpanSizeLookup;
 import com.hendraanggrian.recyclerview.paginated.R;
 
 /**
@@ -21,61 +21,71 @@ import com.hendraanggrian.recyclerview.paginated.R;
  */
 public class PaginatedRecyclerView extends RecyclerView {
 
-    private static final int DEFAULT_THRESHOLD = 5;
+    private static final boolean DEFAULT_LOADING_ENABLED = true;
+    private static final int DEFAULT_LOADING_THRESHOLD = 5;
+    private static final int DEFAULT_INITIAL_PAGE = 1;
+    private static final boolean DEFAULT_SHOULD_START_ON_LOAD = true;
 
     private boolean loadingEnabled;
     private int loadingThreshold;
+    private int currentPage;
+    private boolean shouldStartOnLoad;
 
-    private Pagination pagination;
-    private PaginatedAdapter paginatedAdapter;
-    private PaginatedSpanSizeLookup paginatedLookup;
-
-    private final RecyclerView.OnScrollListener mOnScrollListener = new RecyclerView.OnScrollListener() {
+    @Nullable private Pagination pagination;
+    @Nullable private PaginationAdapter paginationAdapter;
+    @Nullable private PaginationSpanSizeLookup paginationLookup;
+    @NonNull private final RecyclerView.OnScrollListener paginationOnScrollListener = new RecyclerView.OnScrollListener() {
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
             checkEndOffset(); // Each time when list is scrolled check if end of the list is reached
         }
     };
-
-    private final RecyclerView.AdapterDataObserver mDataObserver = new RecyclerView.AdapterDataObserver() {
+    @NonNull private final RecyclerView.AdapterDataObserver paginationObserver = new RecyclerView.AdapterDataObserver() {
         @Override
         public void onChanged() {
-            paginatedAdapter.notifyDataSetChanged();
+            if (paginationAdapter == null) throw new NullPointerException();
+            paginationAdapter.notifyDataSetChanged();
             onAdapterDataChanged();
         }
 
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
-            paginatedAdapter.notifyItemRangeInserted(positionStart, itemCount);
+            if (paginationAdapter == null) throw new NullPointerException();
+            paginationAdapter.notifyItemRangeInserted(positionStart, itemCount);
             onAdapterDataChanged();
         }
 
         @Override
         public void onItemRangeChanged(int positionStart, int itemCount) {
-            paginatedAdapter.notifyItemRangeChanged(positionStart, itemCount);
+            if (paginationAdapter == null) throw new NullPointerException();
+            paginationAdapter.notifyItemRangeChanged(positionStart, itemCount);
             onAdapterDataChanged();
         }
 
         @Override
         public void onItemRangeChanged(int positionStart, int itemCount, Object payload) {
-            paginatedAdapter.notifyItemRangeChanged(positionStart, itemCount, payload);
+            if (paginationAdapter == null) throw new NullPointerException();
+            paginationAdapter.notifyItemRangeChanged(positionStart, itemCount, payload);
             onAdapterDataChanged();
         }
 
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
-            paginatedAdapter.notifyItemRangeRemoved(positionStart, itemCount);
+            if (paginationAdapter == null) throw new NullPointerException();
+            paginationAdapter.notifyItemRangeRemoved(positionStart, itemCount);
             onAdapterDataChanged();
         }
 
         @Override
         public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
-            paginatedAdapter.notifyItemMoved(fromPosition, toPosition);
+            if (paginationAdapter == null) throw new NullPointerException();
+            paginationAdapter.notifyItemMoved(fromPosition, toPosition);
             onAdapterDataChanged();
         }
 
         private void onAdapterDataChanged() {
-            paginatedAdapter.setDisplaying(!pagination.hasLoadedAllItems());
+            if (paginationAdapter == null || pagination == null) throw new NullPointerException();
+            paginationAdapter.setDisplaying(!pagination.isFinished(currentPage));
             checkEndOffset();
         }
     };
@@ -91,41 +101,77 @@ public class PaginatedRecyclerView extends RecyclerView {
     public PaginatedRecyclerView(Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.PaginatedRecyclerView, defStyle, 0);
-        loadingEnabled = a.getBoolean(R.styleable.PaginatedRecyclerView_loadingEnabled, true);
-        loadingThreshold = a.getInteger(R.styleable.PaginatedRecyclerView_loadingThreshold, DEFAULT_THRESHOLD);
+        loadingEnabled = a.getBoolean(R.styleable.PaginatedRecyclerView_loadingEnabled, DEFAULT_LOADING_ENABLED);
+        loadingThreshold = a.getInteger(R.styleable.PaginatedRecyclerView_loadingThreshold, DEFAULT_LOADING_THRESHOLD);
+        currentPage = a.getInteger(R.styleable.PaginatedRecyclerView_initialPage, DEFAULT_INITIAL_PAGE);
+        shouldStartOnLoad = a.getBoolean(R.styleable.PaginatedRecyclerView_shouldStartOnLoad, DEFAULT_SHOULD_START_ON_LOAD);
         a.recycle();
     }
 
+    public boolean isLoadingEnabled() {
+        return loadingEnabled;
+    }
+
+    public void setLoadingEnabled(boolean loadingEnabled) {
+        this.loadingEnabled = loadingEnabled;
+        if (pagination != null) {
+            Pagination temp = pagination;
+            releasePagination();
+            setPagination(temp);
+        }
+    }
+
+    public int getLoadingThreshold() {
+        return loadingThreshold;
+    }
+
+    public void setLoadingThreshold(int loadingThreshold) {
+        this.loadingThreshold = loadingThreshold;
+    }
+
+    public int getCurrentPage() {
+        return currentPage;
+    }
+
+    public void setCurrentPage(int currentPage) {
+        this.currentPage = currentPage;
+    }
+
+    public boolean isShouldStartOnLoad() {
+        return shouldStartOnLoad;
+    }
+
+    public void setShouldStartOnLoad(boolean shouldStartOnLoad) {
+        this.shouldStartOnLoad = shouldStartOnLoad;
+    }
+
+    @Nullable
     public Pagination getPagination() {
         return pagination;
     }
 
-    public void setPagination(Pagination pagination) {
-        setPagination(pagination, true);
-    }
-
-    public void setPagination(Pagination pagination, boolean startOnLoad) {
+    public void setPagination(@Nullable Pagination pagination) {
+        if (pagination == null) throw new NullPointerException();
         this.pagination = pagination;
-        if (startOnLoad) {
-            pagination.onLoadMore(pagination.position);
-            pagination.position++;
+        if (shouldStartOnLoad) {
+            pagination.onLoadMore(currentPage++);
         }
 
-        addOnScrollListener(mOnScrollListener);
+        addOnScrollListener(paginationOnScrollListener);
         if (loadingEnabled) {
             // Wrap existing adapter with new adapter that will add loading row
             RecyclerView.Adapter adapter = getAdapter();
-            paginatedAdapter = new PaginatedAdapter(adapter, pagination.getLoadingAdapter());
-            adapter.registerAdapterDataObserver(mDataObserver);
-            setAdapter(paginatedAdapter);
+            paginationAdapter = new PaginationAdapter(adapter, pagination.getLoadingAdapter());
+            adapter.registerAdapterDataObserver(paginationObserver);
+            setAdapter(paginationAdapter);
 
             // For GridLayoutManager use separate/customisable span lookup for loading row
             if (getLayoutManager() instanceof GridLayoutManager) {
-                paginatedLookup = new PaginatedSpanSizeLookup(
+                paginationLookup = new PaginationSpanSizeLookup(
                         ((GridLayoutManager) getLayoutManager()).getSpanSizeLookup(),
                         pagination.getLoadingSpanSizeLookup(getLayoutManager()),
-                        paginatedAdapter);
-                ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(paginatedLookup);
+                        paginationAdapter);
+                ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(paginationLookup);
             }
         }
 
@@ -134,10 +180,22 @@ public class PaginatedRecyclerView extends RecyclerView {
         checkEndOffset();
     }
 
-    private void checkEndOffset() {
-        int visibleItemCount = getChildCount();
-        int totalItemCount = getLayoutManager().getItemCount();
+    public void releasePagination() {
+        removeOnScrollListener(paginationOnScrollListener);
+        if (getAdapter() instanceof PaginationAdapter) {
+            PaginationAdapter paginatedAdapter = (PaginationAdapter) getAdapter();
+            RecyclerView.Adapter adapter = paginatedAdapter.getOriginalAdapter();
+            adapter.unregisterAdapterDataObserver(paginationObserver);
+            setAdapter(adapter);
+        }
+        if (getLayoutManager() instanceof GridLayoutManager && paginationLookup != null) {
+            GridLayoutManager.SpanSizeLookup spanSizeLookup = paginationLookup.getOriginalLookup();
+            ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(spanSizeLookup);
+        }
+        pagination = null;
+    }
 
+    private void checkEndOffset() {
         int firstVisibleItemPosition;
         if (getLayoutManager() instanceof LinearLayoutManager) {
             firstVisibleItemPosition = ((LinearLayoutManager) getLayoutManager()).findFirstVisibleItemPosition();
@@ -153,45 +211,30 @@ public class PaginatedRecyclerView extends RecyclerView {
         }
 
         // Check if end of the list is reached (counting threshold) or if there is no items at all
+        int visibleItemCount = getChildCount();
+        int totalItemCount = getLayoutManager().getItemCount();
         if ((totalItemCount - visibleItemCount) <= (firstVisibleItemPosition + loadingThreshold) || totalItemCount == 0) {
             // Call load more only if loading is not currently in progress and if there is more items to load
-            if (!pagination.isLoading() && !pagination.hasLoadedAllItems()) {
-                pagination.onLoadMore(pagination.position);
-                pagination.position++;
+            if (pagination == null) throw new NullPointerException();
+            if (!pagination.isLoading() && !pagination.isFinished(currentPage)) {
+                pagination.onLoadMore(currentPage++);
             }
         }
     }
 
     public void setHasMoreDataToLoad(boolean hasMoreDataToLoad) {
-        if (paginatedAdapter != null) {
-            paginatedAdapter.setDisplaying(hasMoreDataToLoad);
-        }
-    }
-
-    public void unbind() {
-        removeOnScrollListener(mOnScrollListener);   // Remove scroll listener
-        if (getAdapter() instanceof PaginatedAdapter) {
-            PaginatedAdapter paginatedAdapter = (PaginatedAdapter) getAdapter();
-            RecyclerView.Adapter adapter = paginatedAdapter.getOriginalAdapter();
-            adapter.unregisterAdapterDataObserver(mDataObserver); // Remove data observer
-            setAdapter(adapter);                     // Swap back original adapter
-        }
-        if (getLayoutManager() instanceof GridLayoutManager && paginatedLookup != null) {
-            // Swap back original SpanSizeLookup
-            GridLayoutManager.SpanSizeLookup spanSizeLookup = paginatedLookup.getOriginalLookup();
-            ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(spanSizeLookup);
+        if (paginationAdapter != null) {
+            paginationAdapter.setDisplaying(hasMoreDataToLoad);
         }
     }
 
     public static abstract class Pagination {
 
-        private int position = 1;
-
-        public abstract void onLoadMore(int position);
+        public abstract void onLoadMore(int page);
 
         public abstract boolean isLoading();
 
-        public abstract boolean hasLoadedAllItems();
+        public abstract boolean isFinished(int page);
 
         @NonNull
         public LoadingAdapter getLoadingAdapter() {

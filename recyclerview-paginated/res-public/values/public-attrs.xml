@@ -3,4 +3,6 @@
     <public name="paginatedRecyclerViewStyle" type="attr"/>
     <public name="loadingEnabled" type="attr"/>
     <public name="loadingThreshold" type="attr"/>
+    <public name="startingPage" type="attr"/>
+    <public name="shouldStartOnLoad" type="attr"/>
 </resources>
