@@ -19,6 +19,7 @@ allprojects {
 
             // main
             support   : '25.4.0',
+            utils     : '0.12',
 
             release   : '0.0.1'
     ]

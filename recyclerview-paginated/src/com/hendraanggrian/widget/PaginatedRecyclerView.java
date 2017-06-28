@@ -10,12 +10,11 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.AttributeSet;
 
-import com.hendraanggrian.recyclerview.paginated.DefaultLoadingListItemSpanLookup;
-import com.hendraanggrian.recyclerview.paginated.LoadingListItemCreator;
-import com.hendraanggrian.recyclerview.paginated.LoadingListItemSpanLookup;
+import com.hendraanggrian.recyclerview.paginated.LoadingAdapter;
+import com.hendraanggrian.recyclerview.paginated.LoadingSpanSizeLookup;
+import com.hendraanggrian.recyclerview.paginated.PaginatedAdapter;
+import com.hendraanggrian.recyclerview.paginated.PaginatedSpanSizeLookup;
 import com.hendraanggrian.recyclerview.paginated.R;
-import com.hendraanggrian.recyclerview.paginated.WrapperAdapter;
-import com.hendraanggrian.recyclerview.paginated.WrapperSpanSizeLookup;
 
 /**
  * @author Hendra Anggrian (hendraanggrian@gmail.com)
@@ -26,10 +25,10 @@ public class PaginatedRecyclerView extends RecyclerView {
 
     private boolean loadingEnabled;
     private int loadingThreshold;
-    private WrapperAdapter wrapperAdapter;
-    private WrapperSpanSizeLookup wrapperSpanSizeLookup;
 
     private Pagination pagination;
+    private PaginatedAdapter paginatedAdapter;
+    private PaginatedSpanSizeLookup paginatedLookup;
 
     private final RecyclerView.OnScrollListener mOnScrollListener = new RecyclerView.OnScrollListener() {
         @Override
@@ -41,42 +40,42 @@ public class PaginatedRecyclerView extends RecyclerView {
     private final RecyclerView.AdapterDataObserver mDataObserver = new RecyclerView.AdapterDataObserver() {
         @Override
         public void onChanged() {
-            wrapperAdapter.notifyDataSetChanged();
+            paginatedAdapter.notifyDataSetChanged();
             onAdapterDataChanged();
         }
 
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
-            wrapperAdapter.notifyItemRangeInserted(positionStart, itemCount);
+            paginatedAdapter.notifyItemRangeInserted(positionStart, itemCount);
             onAdapterDataChanged();
         }
 
         @Override
         public void onItemRangeChanged(int positionStart, int itemCount) {
-            wrapperAdapter.notifyItemRangeChanged(positionStart, itemCount);
+            paginatedAdapter.notifyItemRangeChanged(positionStart, itemCount);
             onAdapterDataChanged();
         }
 
         @Override
         public void onItemRangeChanged(int positionStart, int itemCount, Object payload) {
-            wrapperAdapter.notifyItemRangeChanged(positionStart, itemCount, payload);
+            paginatedAdapter.notifyItemRangeChanged(positionStart, itemCount, payload);
             onAdapterDataChanged();
         }
 
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
-            wrapperAdapter.notifyItemRangeRemoved(positionStart, itemCount);
+            paginatedAdapter.notifyItemRangeRemoved(positionStart, itemCount);
             onAdapterDataChanged();
         }
 
         @Override
         public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
-            wrapperAdapter.notifyItemMoved(fromPosition, toPosition);
+            paginatedAdapter.notifyItemMoved(fromPosition, toPosition);
             onAdapterDataChanged();
         }
 
         private void onAdapterDataChanged() {
-            wrapperAdapter.displayLoadingRow(!pagination.hasLoadedAllItems());
+            paginatedAdapter.setDisplaying(!pagination.hasLoadedAllItems());
             checkEndOffset();
         }
     };
@@ -116,17 +115,17 @@ public class PaginatedRecyclerView extends RecyclerView {
         if (loadingEnabled) {
             // Wrap existing adapter with new adapter that will add loading row
             RecyclerView.Adapter adapter = getAdapter();
-            wrapperAdapter = new WrapperAdapter(adapter, pagination.getLoadingListItemCreator());
+            paginatedAdapter = new PaginatedAdapter(adapter, pagination.getLoadingAdapter());
             adapter.registerAdapterDataObserver(mDataObserver);
-            setAdapter(wrapperAdapter);
+            setAdapter(paginatedAdapter);
 
             // For GridLayoutManager use separate/customisable span lookup for loading row
             if (getLayoutManager() instanceof GridLayoutManager) {
-                wrapperSpanSizeLookup = new WrapperSpanSizeLookup(
+                paginatedLookup = new PaginatedSpanSizeLookup(
                         ((GridLayoutManager) getLayoutManager()).getSpanSizeLookup(),
-                        pagination.getLoadingListItemSpanLookup(getLayoutManager()),
-                        wrapperAdapter);
-                ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(wrapperSpanSizeLookup);
+                        pagination.getLoadingSpanSizeLookup(getLayoutManager()),
+                        paginatedAdapter);
+                ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(paginatedLookup);
             }
         }
 
@@ -164,22 +163,22 @@ public class PaginatedRecyclerView extends RecyclerView {
     }
 
     public void setHasMoreDataToLoad(boolean hasMoreDataToLoad) {
-        if (wrapperAdapter != null) {
-            wrapperAdapter.displayLoadingRow(hasMoreDataToLoad);
+        if (paginatedAdapter != null) {
+            paginatedAdapter.setDisplaying(hasMoreDataToLoad);
         }
     }
 
     public void unbind() {
         removeOnScrollListener(mOnScrollListener);   // Remove scroll listener
-        if (getAdapter() instanceof WrapperAdapter) {
-            WrapperAdapter wrapperAdapter = (WrapperAdapter) getAdapter();
-            RecyclerView.Adapter adapter = wrapperAdapter.getWrappedAdapter();
+        if (getAdapter() instanceof PaginatedAdapter) {
+            PaginatedAdapter paginatedAdapter = (PaginatedAdapter) getAdapter();
+            RecyclerView.Adapter adapter = paginatedAdapter.getOriginalAdapter();
             adapter.unregisterAdapterDataObserver(mDataObserver); // Remove data observer
             setAdapter(adapter);                     // Swap back original adapter
         }
-        if (getLayoutManager() instanceof GridLayoutManager && wrapperSpanSizeLookup != null) {
+        if (getLayoutManager() instanceof GridLayoutManager && paginatedLookup != null) {
             // Swap back original SpanSizeLookup
-            GridLayoutManager.SpanSizeLookup spanSizeLookup = wrapperSpanSizeLookup.getWrappedSpanSizeLookup();
+            GridLayoutManager.SpanSizeLookup spanSizeLookup = paginatedLookup.getOriginalLookup();
             ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(spanSizeLookup);
         }
     }
@@ -195,13 +194,13 @@ public class PaginatedRecyclerView extends RecyclerView {
         public abstract boolean hasLoadedAllItems();
 
         @NonNull
-        public LoadingListItemCreator getLoadingListItemCreator() {
-            return LoadingListItemCreator.DEFAULT;
+        public LoadingAdapter getLoadingAdapter() {
+            return LoadingAdapter.DEFAULT;
         }
 
         @NonNull
-        public LoadingListItemSpanLookup getLoadingListItemSpanLookup(@NonNull LayoutManager lm) {
-            return new DefaultLoadingListItemSpanLookup(lm);
+        public LoadingSpanSizeLookup getLoadingSpanSizeLookup(@NonNull LayoutManager lm) {
+            return LoadingSpanSizeLookup.getDefault(lm);
         }
     }
 }
