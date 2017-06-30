@@ -1,11 +1,13 @@
 PaginatedRecyclerView
 =====================
-Customizable pagination in Android RecyclerView.
+![icon][icon]
 
-![demo_list][demo_list] ![demo_grid][demo_grid]
+Customizable pagination in Android RecyclerView.
 
 Usage
 -----
+![demo_list][demo_list] ![demo_grid][demo_grid]
+
 #### Use `PaginatedRecyclerView`
 It has several attributes:
  * `loadingEnabled` - Will enable loading row while paginating, default is true.
@@ -102,5 +104,6 @@ License
     See the License for the specific language governing permissions and
     limitations under the License.
     
+[icon]: /example/res/mipmap-xxxhdpi/ic_launcher.png
 [demo_list]: /art/demo_list.gif
 [demo_grid]: /art/demo_grid.gif

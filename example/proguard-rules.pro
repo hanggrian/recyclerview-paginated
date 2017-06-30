@@ -1,5 +1,5 @@
 # retain data classes for gson
--keep class com.example.recyclerview_paginated.Post
+-keep class Post
 
 # jdk8 and kotlin
 -dontwarn javax.annotation.**

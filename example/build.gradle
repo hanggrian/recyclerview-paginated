@@ -14,9 +14,6 @@ buildscript {
             retrofit2: '2.3.0',
             okhttp3  : '3.8.1'
     ]
-    ext.runner = '0.5'
-    ext.espresso = '2.2.2'
-    ext.junit = '4.12'
     repositories {
         mavenCentral()
     }
@@ -34,7 +31,12 @@ android {
         versionName "1.0"
         minSdkVersion versions.sdk.min
         targetSdkVersion versions.sdk.target
-        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
+    }
+    sourceSets {
+        main.manifest.srcFile 'AndroidManifest.xml'
+        main.java.srcDirs 'src'
+        main.res.srcDirs = ['res', 'res-public']
+        main.resources.srcDir 'src'
     }
     buildTypes {
         debug {
@@ -65,13 +67,4 @@ dependencies {
     compile "com.squareup.retrofit2:converter-gson:$square.retrofit2"
     compile "com.squareup.okhttp3:okhttp:$square.okhttp3"
     compile "com.squareup.okhttp3:logging-interceptor:$square.okhttp3"
-
-    androidTestCompile("com.android.support.test:runner:$runner") {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    }
-    androidTestCompile("com.android.support.test.espresso:espresso-core:$espresso") {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    }
-
-    testCompile "junit:junit:$junit"
 }
