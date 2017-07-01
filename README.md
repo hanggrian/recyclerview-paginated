@@ -1,7 +1,5 @@
 PaginatedRecyclerView
 =====================
-![icon][icon]
-
 Customizable pagination in Android RecyclerView.
 
 Usage
@@ -104,6 +102,5 @@ License
     See the License for the specific language governing permissions and
     limitations under the License.
     
-[icon]: /example/res/mipmap-xxxhdpi/ic_launcher.png
 [demo_list]: /art/demo_list.gif
 [demo_grid]: /art/demo_grid.gif
