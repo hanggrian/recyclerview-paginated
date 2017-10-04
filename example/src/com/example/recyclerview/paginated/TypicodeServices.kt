@@ -1,4 +1,4 @@
-package com.example.recyclerview_paginated
+package com.example.recyclerview.paginated
 
 import io.reactivex.Observable
 import okhttp3.OkHttpClient

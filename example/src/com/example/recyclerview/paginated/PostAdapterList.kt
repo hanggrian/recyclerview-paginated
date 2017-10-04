@@ -1,4 +1,4 @@
-package com.example.recyclerview_paginated
+package com.example.recyclerview.paginated
 
 import android.content.Context
 import android.support.v7.widget.RecyclerView
@@ -12,13 +12,9 @@ import android.widget.TextView
  */
 class PostAdapterList(context: Context) : PostAdapter<PostAdapterList.ViewHolder>(context) {
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
-        return ViewHolder(LayoutInflater.from(context).inflate(R.layout.item_post_list, parent, false))
-    }
+    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder = ViewHolder(LayoutInflater.from(context).inflate(R.layout.item_post_list, parent, false))
 
-    override fun getItemCount(): Int {
-        return list.size
-    }
+    override fun getItemCount(): Int = list.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         list[position].let {
@@ -28,7 +24,7 @@ class PostAdapterList(context: Context) : PostAdapter<PostAdapterList.ViewHolder
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val textViewTitle = itemView.findViewById(R.id.textViewTitle) as TextView
-        val textViewId = itemView.findViewById(R.id.textViewId) as TextView
+        val textViewTitle: TextView = itemView.findViewById(R.id.textViewTitle)
+        val textViewId: TextView = itemView.findViewById(R.id.textViewId)
     }
 }

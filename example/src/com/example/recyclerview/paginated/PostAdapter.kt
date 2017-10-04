@@ -1,4 +1,4 @@
-package com.example.recyclerview_paginated
+package com.example.recyclerview.paginated
 
 import android.content.Context
 import android.support.v7.widget.RecyclerView

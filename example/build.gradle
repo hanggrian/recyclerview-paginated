@@ -3,40 +3,36 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
-buildscript {
-    ext.kotlin = '1.1.3'
-    ext.circleImageView = '2.1.0'
-    ext.rxjava2 = [
+ext {
+    kota = '0.8.0'
+    circleImageView = '2.1.0'
+    rxjava2 = [
             'rxandroid': '2.0.1',
             'rxjava'   : '2.1.0'
     ]
-    ext.square = [
+    square = [
             retrofit2: '2.3.0',
             okhttp3  : '3.8.1'
     ]
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin"
-    }
 }
 
 android {
     compileSdkVersion versions.sdk.target
     buildToolsVersion versions.buildTools
     defaultConfig {
-        applicationId 'com.example.recyclerview_paginated'
+        applicationId 'com.example.recyclerview.paginated'
         versionCode 1
-        versionName "1.0"
+        versionName '1.0'
         minSdkVersion versions.sdk.min
         targetSdkVersion versions.sdk.target
     }
     sourceSets {
-        main.manifest.srcFile 'AndroidManifest.xml'
-        main.java.srcDirs 'src'
-        main.res.srcDirs = ['res', 'res-public']
-        main.resources.srcDir 'src'
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs 'src'
+            res.srcDirs = ['res', 'res-public']
+            resources.srcDir 'src'
+        }
     }
     buildTypes {
         debug {
@@ -50,21 +46,30 @@ android {
     }
 }
 
+repositories {
+    google()
+    jcenter()
+    maven { url 'https://dl.bintray.com/hendraanggrian/maven' }
+}
+
 dependencies {
-    compile project(':recyclerview-paginated')
-    compile "com.android.support:appcompat-v7:$versions.support"
-    compile "com.android.support:cardview-v7:$versions.support"
-    compile "com.android.support:design:$versions.support"
+    implementation project(':recyclerview-paginated')
+    implementation "com.android.support:appcompat-v7:$versions.support"
+    implementation "com.android.support:cardview-v7:$versions.support"
+    implementation "com.android.support:design:$versions.support"
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin"
-    compile "de.hdodenhof:circleimageview:$circleImageView"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre8:$versions.kotlin"
+    implementation "com.hendraanggrian:kota:$kota"
+    implementation "com.hendraanggrian:kota-support-v4:$kota"
 
-    compile "io.reactivex.rxjava2:rxandroid:$rxjava2.rxandroid"
-    compile "io.reactivex.rxjava2:rxjava:$rxjava2.rxjava"
+    implementation "de.hdodenhof:circleimageview:$circleImageView"
 
-    compile "com.squareup.retrofit2:retrofit:$square.retrofit2"
-    compile "com.squareup.retrofit2:adapter-rxjava2:$square.retrofit2"
-    compile "com.squareup.retrofit2:converter-gson:$square.retrofit2"
-    compile "com.squareup.okhttp3:okhttp:$square.okhttp3"
-    compile "com.squareup.okhttp3:logging-interceptor:$square.okhttp3"
+    implementation "io.reactivex.rxjava2:rxandroid:$rxjava2.rxandroid"
+    implementation "io.reactivex.rxjava2:rxjava:$rxjava2.rxjava"
+
+    implementation "com.squareup.retrofit2:retrofit:$square.retrofit2"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$square.retrofit2"
+    implementation "com.squareup.retrofit2:converter-gson:$square.retrofit2"
+    implementation "com.squareup.okhttp3:okhttp:$square.okhttp3"
+    implementation "com.squareup.okhttp3:logging-interceptor:$square.okhttp3"
 }

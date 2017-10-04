@@ -1,4 +1,4 @@
-package com.example.recyclerview_paginated
+package com.example.recyclerview.paginated
 
 /**
  * @author Hendra Anggrian (hendraanggrian@gmail.com)

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="PaginatedRecyclerViewStyle">
-        <attr name="paginatedRecyclerViewStyle" format="reference"/>
+        <attr name="paginatedRecyclerViewStyle" format="reference" />
     </declare-styleable>
 
     <declare-styleable name="PaginatedRecyclerView">
         <!-- Will enable loading row while paginating, default is true. -->
-        <attr name="loadingEnabled" format="integer"/>
+        <attr name="loadingEnabled" format="integer" />
         <!-- Set the offset from the end of the list at which the load more event needs to be triggered, default is 5. -->
-        <attr name="loadingThreshold" format="integer"/>
+        <attr name="loadingThreshold" format="integer" />
         <!-- Will call onLoadMore() when new pagination is set, default is true. -->
-        <attr name="shouldStartOnLoad" format="integer"/>
+        <attr name="loadOnStart" format="boolean" />
     </declare-styleable>
 </resources>

@@ -1,34 +1,39 @@
 buildscript {
+    ext.versions = [
+            release   : '0.2.0',
+            // android
+            sdk       : [
+                    'min'   : 14,
+                    'target': 26
+            ],
+            buildTools: '26.0.2',
+            // main
+            kotlin    : '1.1.51',
+            support   : '26.1.0',
+            // test
+            runner    : '0.5',
+            rules     : '0.5',
+            espresso  : '2.2.2',
+            junit     : '4.12'
+    ]
     repositories {
+        google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.3'
-        classpath 'com.novoda:bintray-release:0.3.4'
+        classpath 'com.android.tools.build:gradle:3.0.0-beta7'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
+        classpath 'com.novoda:bintray-release:0.5.0'
     }
 }
 
 allprojects {
-    ext.versions = [
-            // android
-            sdk       : [
-                    'min'   : 9,
-                    'target': 25
-            ],
-            buildTools: '25.0.3',
-
-            // main
-            support   : '25.4.0',
-
-            release   : '0.1.0'
-    ]
     repositories {
-        maven { url "https://maven.google.com" }
+        google()
         jcenter()
     }
     tasks.withType(Javadoc) {
-        options.addStringOption('Xdoclint:none', '-quiet')
-        options.addStringOption('encoding', 'UTF-8')
+        enabled = false
     }
 }
 
@@ -36,4 +41,7 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-//$ ./gradlew bintrayUpload -PbintrayUser=hendraanggrian -PbintrayKey= -PdryRun=false
+/**
+ ./gradlew recyclerview-paginated:clean recyclerview-paginated:build
+ ./gradlew recyclerview-paginated:bintrayUpload -PbintrayUser=hendraanggrian -PdryRun=false -PbintrayKey=
+ */

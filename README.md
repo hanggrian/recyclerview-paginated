@@ -10,31 +10,31 @@ Usage
 It has several attributes:
  * `loadingEnabled` - Will enable loading row while paginating, default is true.
  * `loadingThreshold` - Set the offset from the end of the list at which the load more event needs to be triggered, default is 5.
- * `shouldStartOnLoad` - Will call onLoadMore() when new pagination is set, default is true.
+ * `loadOnStart` - Will call onLoadMore() when new pagination is set, default is true.
   
 ```xml
 <com.hendraanggrian.widget.PaginatedRecyclerView
     android:id="@+id/recyclerView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:shouldStartOnLoad="false" />
+    app:loadOnStart="false" />
 ```
 
 #### Create `Pagination`
 ```java
 public class PostPagination extends PaginatedRecyclerView.Pagination {
     @Override
-    public void onLoadMode(int page) {
+    public void onLoadMode(int currentPage) {
         ...
     }
     
     @Override
-    public boolean isLoading(int page) {
+    public boolean isLoading(int currentPage) {
         ...
     }
     
     @Override
-    public boolean isFinished(int page) {
+    public boolean isFinished(int currentPage) {
         ...
     }
 }
@@ -76,12 +76,12 @@ Download
 --------
 ```gradle
 repositories {
-    maven { url "https://maven.google.com" }
+    google()
     jcenter()
 }
 
 dependencies {
-    compile 'com.hendraanggrian:recyclerview-paginated:0.1.0'
+    compile 'com.hendraanggrian:recyclerview-paginated:0.2.0'
 }
 ```
 
