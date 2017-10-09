@@ -13,7 +13,9 @@ import com.hendraanggrian.recyclerview.paginated.LoadingAdapter
 import com.hendraanggrian.widget.PaginatedRecyclerView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kota.contents.getAttrColor
 import kota.contents.getDrawable2
+import kota.debug
 import kota.layoutInflater
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -57,6 +59,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
         populate()
+
+        debug(String.format("#%06X", 0xFFFFFF and getAttrColor(R.attr.colorAccent)))
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

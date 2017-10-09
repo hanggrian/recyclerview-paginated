@@ -1,6 +1,6 @@
 buildscript {
     ext.versions = [
-            release   : '0.2.0',
+            release   : '0.2',
             // android
             sdk       : [
                     'min'   : 14,
