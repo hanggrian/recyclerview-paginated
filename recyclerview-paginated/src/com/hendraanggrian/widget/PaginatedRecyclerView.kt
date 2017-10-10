@@ -62,7 +62,7 @@ class PaginatedRecyclerView @JvmOverloads constructor(
         private fun onAdapterDataChanged() {
             checkNotNull(mPaginationAdapter)
             checkNotNull(pagination)
-            mPaginationAdapter!!.isDisplaying = !pagination!!.isFinished(pagination!!.currentPage)
+            mPaginationAdapter!!.isDisplaying = !pagination!!.isFinished(pagination!!.mPage)
             checkEndOffset()
         }
     }
@@ -72,7 +72,7 @@ class PaginatedRecyclerView @JvmOverloads constructor(
             if (value == null) throw UnsupportedOperationException()
             field = value
             if (loadOnStart) {
-                field!!.onLoadMore(field!!.currentPage++)
+                field!!.load()
             }
             addOnScrollListener(mPaginationOnScrollListener)
             if (loadingEnabled) {
@@ -145,8 +145,8 @@ class PaginatedRecyclerView @JvmOverloads constructor(
         if (totalItemCount - visibleItemCount <= firstVisibleItemPosition + loadingThreshold || totalItemCount == 0) {
             // Call load more only if loading is not currently in progress and if there is more items to load
             checkNotNull(pagination)
-            if (!pagination!!.isLoading(pagination!!.currentPage) && !pagination!!.isFinished(pagination!!.currentPage)) {
-                pagination!!.onLoadMore(pagination!!.currentPage++)
+            if (!pagination!!.mLoading && !pagination!!.isFinished(pagination!!.mPage)) {
+                pagination!!.load()
             }
         }
     }
@@ -156,13 +156,24 @@ class PaginatedRecyclerView @JvmOverloads constructor(
     }
 
     abstract class Pagination @JvmOverloads constructor(initialPage: Int = 1) {
-        internal var currentPage: Int = initialPage
+        internal var mPage: Int = initialPage
+        internal var mLoading: Boolean = true
 
-        abstract fun onLoadMore(page: Int)
-        abstract fun isLoading(page: Int): Boolean
         abstract fun isFinished(page: Int): Boolean
 
+        abstract fun onLoad(page: Int)
+
+        fun load() {
+            mLoading = true
+            onLoad(mPage++)
+        }
+
+        fun notifyLoadCompleted() {
+            mLoading = false
+        }
+
         open val loadingAdapter: LoadingAdapter get() = LoadingAdapter.DEFAULT
+
         open fun getLoadingSpanSizeLookup(lm: RecyclerView.LayoutManager): LoadingSpanSizeLookup = LoadingSpanSizeLookup.getDefault(lm)
     }
 }

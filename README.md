@@ -10,7 +10,7 @@ Usage
 It has several attributes:
  * `loadingEnabled` - Will enable loading row while paginating, default is true.
  * `loadingThreshold` - Set the offset from the end of the list at which the load more event needs to be triggered, default is 5.
- * `loadOnStart` - Will call onLoadMore() when new pagination is set, default is true.
+ * `loadOnStart` - Will call onLoad() when new pagination is set, default is true.
 
 ```xml
 <com.hendraanggrian.widget.PaginatedRecyclerView
@@ -24,17 +24,17 @@ It has several attributes:
 ```java
 public class PostPagination extends PaginatedRecyclerView.Pagination {
     @Override
-    public void onLoadMode(int currentPage) {
+    public void onLoadMode(int mPage) {
         ...
     }
 
     @Override
-    public boolean isLoading(int currentPage) {
+    public boolean mLoading(int mPage) {
         ...
     }
 
     @Override
-    public boolean isFinished(int currentPage) {
+    public boolean isFinished(int mPage) {
         ...
     }
 }

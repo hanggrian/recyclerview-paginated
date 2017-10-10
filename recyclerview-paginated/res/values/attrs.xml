@@ -9,7 +9,7 @@
         <attr name="loadingEnabled" format="integer" />
         <!-- Set the offset from the end of the list at which the load more event needs to be triggered, default is 5. -->
         <attr name="loadingThreshold" format="integer" />
-        <!-- Will call onLoadMore() when new pagination is set, default is true. -->
+        <!-- Will conLoadMore() when new pagination is set, default is true. -->
         <attr name="loadOnStart" format="boolean" />
     </declare-styleable>
 </resources>

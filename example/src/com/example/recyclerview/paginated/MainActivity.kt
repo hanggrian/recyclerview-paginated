@@ -26,23 +26,18 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         fun newPagination(adapter: PostAdapter<*>, useCustomLoadingAdapter: Boolean): PaginatedRecyclerView.Pagination = object : PaginatedRecyclerView.Pagination() {
-            var loading = true
-
-            override fun onLoadMore(page: Int) {
-                loading = true
+            override fun onLoad(page: Int) {
                 TypicodeServices.create()
                         .posts(page)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe({ post ->
-                            loading = false
+                            notifyLoadCompleted()
                             adapter.add(post)
                         }, {
-                            loading = false
+                            notifyLoadCompleted()
                         })
             }
-
-            override fun isLoading(page: Int): Boolean = loading
 
             override fun isFinished(page: Int): Boolean = page > 100
 
