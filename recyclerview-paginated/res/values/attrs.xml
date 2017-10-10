@@ -6,10 +6,8 @@
 
     <declare-styleable name="PaginatedRecyclerView">
         <!-- Will enable loading row while paginating, default is true. -->
-        <attr name="loadingEnabled" format="integer" />
+        <attr name="loadEnabled" format="integer" />
         <!-- Set the offset from the end of the list at which the load more event needs to be triggered, default is 5. -->
-        <attr name="loadingThreshold" format="integer" />
-        <!-- Will conLoadMore() when new pagination is set, default is true. -->
-        <attr name="loadOnStart" format="boolean" />
+        <attr name="loadThreshold" format="integer" />
     </declare-styleable>
 </resources>

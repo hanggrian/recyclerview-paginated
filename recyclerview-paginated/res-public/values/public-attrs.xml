@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <public name="paginatedRecyclerViewStyle" type="attr" />
-    <public name="loadingEnabled" type="attr" />
-    <public name="loadingThreshold" type="attr" />
-    <public name="loadOnStart" type="attr" />
+    <public name="loadEnabled" type="attr" />
+    <public name="loadThreshold" type="attr" />
 </resources>

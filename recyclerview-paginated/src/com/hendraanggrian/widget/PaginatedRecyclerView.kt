@@ -11,7 +11,7 @@ import com.hendraanggrian.recyclerview.paginated.*
 /**
  * @author Hendra Anggrian (hendraanggrian@gmail.com)
  */
-class PaginatedRecyclerView @JvmOverloads constructor(
+open class PaginatedRecyclerView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyle: Int = R.attr.paginatedRecyclerViewStyle
@@ -62,7 +62,7 @@ class PaginatedRecyclerView @JvmOverloads constructor(
         private fun onAdapterDataChanged() {
             checkNotNull(mPaginationAdapter)
             checkNotNull(pagination)
-            mPaginationAdapter!!.isDisplaying = !pagination!!.isFinished(pagination!!.mPage)
+            mPaginationAdapter!!.isDisplaying = !pagination!!.isFinished(pagination!!.page)
             checkEndOffset()
         }
     }
@@ -71,11 +71,11 @@ class PaginatedRecyclerView @JvmOverloads constructor(
         set(value) {
             if (value == null) throw UnsupportedOperationException()
             field = value
-            if (loadOnStart) {
+            if (field!!.loadOnStart) {
                 field!!.load()
             }
             addOnScrollListener(mPaginationOnScrollListener)
-            if (loadingEnabled) {
+            if (loadEnabled) {
                 // Wrap existing adapter with new adapter that will add loading row
                 val adapter = adapter
                 mPaginationAdapter = PaginationAdapter(adapter, field!!.loadingAdapter)
@@ -96,7 +96,7 @@ class PaginatedRecyclerView @JvmOverloads constructor(
             checkEndOffset()
         }
 
-    var loadingEnabled: Boolean = false
+    var loadEnabled: Boolean = false
         set(value) {
             field = value
             if (pagination != null) {
@@ -105,18 +105,16 @@ class PaginatedRecyclerView @JvmOverloads constructor(
                 pagination = temp
             }
         }
-    var loadingThreshold: Int
-    var loadOnStart: Boolean
+    var loadThreshold: Int
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.PaginatedRecyclerView, defStyle, 0)
-        loadingEnabled = a.getBoolean(R.styleable.PaginatedRecyclerView_loadingEnabled, true)
-        loadingThreshold = a.getInteger(R.styleable.PaginatedRecyclerView_loadingThreshold, 5)
-        loadOnStart = a.getBoolean(R.styleable.PaginatedRecyclerView_loadOnStart, true)
+        loadEnabled = a.getBoolean(R.styleable.PaginatedRecyclerView_loadEnabled, true)
+        loadThreshold = a.getInteger(R.styleable.PaginatedRecyclerView_loadThreshold, 5)
         a.recycle()
     }
 
-    fun releasePagination() {
+    open fun releasePagination() {
         removeOnScrollListener(mPaginationOnScrollListener)
         if (adapter is PaginationAdapter) {
             val paginatedAdapter = adapter as PaginationAdapter
@@ -142,21 +140,23 @@ class PaginatedRecyclerView @JvmOverloads constructor(
         // Check if end of the list is reached (counting threshold) or if there is no items at all
         val visibleItemCount = childCount
         val totalItemCount = layoutManager.itemCount
-        if (totalItemCount - visibleItemCount <= firstVisibleItemPosition + loadingThreshold || totalItemCount == 0) {
+        if (totalItemCount - visibleItemCount <= firstVisibleItemPosition + loadThreshold || totalItemCount == 0) {
             // Call load more only if loading is not currently in progress and if there is more items to load
             checkNotNull(pagination)
-            if (!pagination!!.mLoading && !pagination!!.isFinished(pagination!!.mPage)) {
+            if (!pagination!!.mLoading && !pagination!!.isFinished(pagination!!.page)) {
                 pagination!!.load()
             }
         }
     }
 
-    fun setHasMoreDataToLoad(hasMoreDataToLoad: Boolean) {
+    open fun setHasMoreDataToLoad(hasMoreDataToLoad: Boolean) {
         mPaginationAdapter?.isDisplaying = hasMoreDataToLoad
     }
 
-    abstract class Pagination @JvmOverloads constructor(initialPage: Int = 1) {
-        internal var mPage: Int = initialPage
+    abstract class Pagination @JvmOverloads constructor(
+            internal var page: Int = 1,
+            internal val loadOnStart: Boolean = true
+    ) {
         internal var mLoading: Boolean = true
 
         abstract fun isFinished(page: Int): Boolean
@@ -165,7 +165,7 @@ class PaginatedRecyclerView @JvmOverloads constructor(
 
         fun load() {
             mLoading = true
-            onLoad(mPage++)
+            onLoad(page++)
         }
 
         fun notifyLoadCompleted() {

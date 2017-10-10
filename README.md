@@ -8,8 +8,8 @@ Usage
 
 #### Use `PaginatedRecyclerView`
 It has several attributes:
- * `loadingEnabled` - Will enable loading row while paginating, default is true.
- * `loadingThreshold` - Set the offset from the end of the list at which the load more event needs to be triggered, default is 5.
+ * `loadEnabled` - Will enable loading row while paginating, default is true.
+ * `loadThreshold` - Set the offset from the end of the list at which the load more event needs to be triggered, default is 5.
  * `loadOnStart` - Will call onLoad() when new pagination is set, default is true.
 
 ```xml
