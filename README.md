@@ -2,40 +2,33 @@ PaginatedRecyclerView
 =====================
 Customizable pagination in Android RecyclerView.
 
-Usage
------
 ![demo_list][demo_list] ![demo_grid][demo_grid]
 
+Usage
+-----
 #### Use `PaginatedRecyclerView`
 It has several attributes:
  * `loadEnabled` - Will enable loading row while paginating, default is true.
- * `loadThreshold` - Set the offset from the end of the list at which the load more event needs to be triggered, default is 5.
- * `loadOnStart` - Will call onLoad() when new pagination is set, default is true.
+ * `loadThreshold` - Set the offset from the end of the list at which the populatePage more event needs to be triggered, default is 5.
 
 ```xml
 <com.hendraanggrian.widget.PaginatedRecyclerView
     android:id="@+id/recyclerView"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    app:loadOnStart="false" />
+    android:layout_height="match_parent" />
 ```
 
 #### Create `Pagination`
 ```java
 public class PostPagination extends PaginatedRecyclerView.Pagination {
     @Override
-    public void onLoadMode(int mPage) {
-        ...
+    public boolean onPreparePage(int page) {
+        return true;
     }
-
+    
     @Override
-    public boolean mLoading(int mPage) {
-        ...
-    }
-
-    @Override
-    public boolean isFinished(int mPage) {
-        ...
+    public void onPopulatePage(int page) {
+        
     }
 }
 ```
@@ -81,7 +74,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.hendraanggrian:recyclerview-paginated:0.2'
+    compile 'com.hendraanggrian:recyclerview-paginated:0.3'
 }
 ```
 

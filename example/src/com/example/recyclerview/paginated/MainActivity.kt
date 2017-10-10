@@ -9,13 +9,10 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import com.hendraanggrian.recyclerview.paginated.LoadingAdapter
 import com.hendraanggrian.widget.PaginatedRecyclerView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import kota.contents.getAttrColor
 import kota.contents.getDrawable2
-import kota.debug
 import kota.layoutInflater
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -26,22 +23,22 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         fun newPagination(adapter: PostAdapter<*>, useCustomLoadingAdapter: Boolean): PaginatedRecyclerView.Pagination = object : PaginatedRecyclerView.Pagination() {
-            override fun onLoad(page: Int) {
+            override fun onPreparePage(page: Int): Boolean = page < 100
+
+            override fun onPopulatePage(page: Int) {
                 TypicodeServices.create()
                         .posts(page)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe({ post ->
-                            notifyLoadCompleted()
+                            notifyPopulateCompleted()
                             adapter.add(post)
                         }, {
-                            notifyLoadCompleted()
+                            notifyPopulateCompleted()
                         })
             }
 
-            override fun isFinished(page: Int): Boolean = page > 100
-
-            override val loadingAdapter: LoadingAdapter
+            override val loadingAdapter: PaginatedRecyclerView.LoadingAdapter
                 get() = if (useCustomLoadingAdapter) CustomLoadingAdapter()
                 else super.loadingAdapter
         }
@@ -54,8 +51,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
         populate()
-
-        debug(String.format("#%06X", 0xFFFFFF and getAttrColor(R.attr.colorAccent)))
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -90,7 +85,7 @@ class MainActivity : AppCompatActivity() {
         recyclerView.pagination = newPagination(recyclerView.adapter as PostAdapter, false)
     }
 
-    class CustomLoadingAdapter : LoadingAdapter() {
+    class CustomLoadingAdapter : PaginatedRecyclerView.LoadingAdapter() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
                 ViewHolder(parent.context.layoutInflater.inflate(R.layout.custom_loading_row, parent, false))
 

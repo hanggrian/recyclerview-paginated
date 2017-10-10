@@ -42,6 +42,6 @@ task clean(type: Delete) {
 }
 
 /**
- ./gradlew recyclerview-paginated:clean recyclerview-paginated:build
- ./gradlew recyclerview-paginated:bintrayUpload -PbintrayUser=hendraanggrian -PdryRun=false -PbintrayKey=
+ ./gradlew :recyclerview-paginated:clean :recyclerview-paginated:build
+ ./gradlew :recyclerview-paginated:bintrayUpload -PbintrayUser=hendraanggrian -PdryRun=false -PbintrayKey=
  */

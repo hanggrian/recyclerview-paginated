@@ -1,14 +1,14 @@
-package com.hendraanggrian.recyclerview.paginated
+package com.hendraanggrian.widget
 
 import android.support.v7.widget.GridLayoutManager
 
 /**
  * @author Hendra Anggrian (hendraanggrian@gmail.com)
  */
-class PaginationSpanSizeLookup(
+internal class PaginationSpanSizeLookup(
         val originalLookup: GridLayoutManager.SpanSizeLookup,
-        private val loadingLookup: LoadingSpanSizeLookup,
-        private val paginatedAdapter: PaginationAdapter
+        val loadingLookup: GridLayoutManager.SpanSizeLookup,
+        val paginatedAdapter: PaginationAdapter
 ) : GridLayoutManager.SpanSizeLookup() {
 
     override fun getSpanSize(position: Int): Int =

@@ -1,27 +1,31 @@
-package com.hendraanggrian.recyclerview.paginated
+package com.hendraanggrian.widget
 
 import android.support.v7.widget.RecyclerView
 import android.view.ViewGroup
 
-/**
- * @author Hendra Anggrian (hendraanggrian@gmail.com)
- */
-class PaginationAdapter(
+internal class PaginationAdapter(
         val actualAdapter: RecyclerView.Adapter<RecyclerView.ViewHolder>,
-        val loadingAdapter: LoadingAdapter
+        val loadingAdapter: RecyclerView.Adapter<RecyclerView.ViewHolder>
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    var mDisplaying: Boolean = true
 
     companion object {
         private const val ITEM_VIEW_TYPE_LOADING = Integer.MAX_VALUE - 50 // Magic
     }
 
-    internal var isDisplaying = true
-        set(value) {
-            if (isDisplaying != value) {
-                field = value
+    var isDisplaying: Boolean
+        get() = mDisplaying
+        set(displaying) {
+            if (isDisplaying != displaying) {
+                mDisplaying = displaying
                 notifyDataSetChanged()
             }
         }
+
+    private val loadingRowPosition: Int get() = if (isDisplaying) itemCount - 1 else -1
+
+    internal fun isLoadingRow(position: Int): Boolean = isDisplaying && position == loadingRowPosition
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
             if (viewType == ITEM_VIEW_TYPE_LOADING) loadingAdapter.onCreateViewHolder(parent, viewType)
@@ -41,8 +45,4 @@ class PaginationAdapter(
         super.setHasStableIds(hasStableIds)
         actualAdapter.setHasStableIds(hasStableIds)
     }
-
-    internal fun isLoadingRow(position: Int): Boolean = isDisplaying && position == loadingRowPosition
-
-    private val loadingRowPosition: Int get() = if (isDisplaying) itemCount - 1 else -1
 }

@@ -6,20 +6,20 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.StaggeredGridLayoutManager
 import android.util.AttributeSet
-import com.hendraanggrian.recyclerview.paginated.*
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import com.hendraanggrian.recyclerview.paginated.R
 
-/**
- * @author Hendra Anggrian (hendraanggrian@gmail.com)
- */
 open class PaginatedRecyclerView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyle: Int = R.attr.paginatedRecyclerViewStyle
+        defStyle: Int = 0
 ) : RecyclerView(context, attrs, defStyle) {
 
+    private var mPagination: Pagination? = null
     private var mPaginationAdapter: PaginationAdapter? = null
     private var mPaginationLookup: PaginationSpanSizeLookup? = null
-    private val mPaginationOnScrollListener = object : RecyclerView.OnScrollListener() {
+    private val mPaginationOnScrollListener: RecyclerView.OnScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) = checkEndOffset() // Each time when list is scrolled check if end of the list is reached
     }
     private val mPaginationObserver = object : RecyclerView.AdapterDataObserver() {
@@ -61,24 +61,49 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
 
         private fun onAdapterDataChanged() {
             checkNotNull(mPaginationAdapter)
-            checkNotNull(pagination)
-            mPaginationAdapter!!.isDisplaying = !pagination!!.isFinished(pagination!!.page)
+            checkNotNull(mPagination)
+            mPaginationAdapter!!.isDisplaying = mPagination!!.onPreparePage(mPagination!!.mPage)
             checkEndOffset()
         }
     }
 
-    var pagination: Pagination? = null
-        set(value) {
-            if (value == null) throw UnsupportedOperationException()
-            field = value
-            if (field!!.loadOnStart) {
-                field!!.load()
+    private var mLoadEnabled: Boolean
+    private var mLoadThreshold: Int
+
+    init {
+        val a = context.obtainStyledAttributes(attrs, R.styleable.PaginatedRecyclerView, defStyle, 0)
+        mLoadEnabled = a.getBoolean(R.styleable.PaginatedRecyclerView_loadEnabled, true)
+        mLoadThreshold = a.getInteger(R.styleable.PaginatedRecyclerView_loadThreshold, 5)
+        a.recycle()
+    }
+
+    open var loadEnabled: Boolean
+        get() = mLoadEnabled
+        set(enabled) {
+            mLoadEnabled = enabled
+            if (mPagination != null) {
+                val temp = mPagination
+                releasePagination()
+                mPagination = temp
             }
+        }
+
+    open var loadThreshold: Int
+        get() = mLoadThreshold
+        set(threshold) {
+            mLoadThreshold = threshold
+        }
+
+    open var pagination: Pagination?
+        get() = mPagination
+        set(pagination) {
+            if (pagination == null) throw UnsupportedOperationException()
+            mPagination = pagination
             addOnScrollListener(mPaginationOnScrollListener)
-            if (loadEnabled) {
+            if (mLoadEnabled) {
                 // Wrap existing adapter with new adapter that will add loading row
                 val adapter = adapter
-                mPaginationAdapter = PaginationAdapter(adapter, field!!.loadingAdapter)
+                mPaginationAdapter = PaginationAdapter(adapter, mPagination!!.loadingAdapter)
                 adapter.registerAdapterDataObserver(mPaginationObserver)
                 setAdapter(mPaginationAdapter)
 
@@ -86,7 +111,7 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
                 if (layoutManager is GridLayoutManager) {
                     mPaginationLookup = PaginationSpanSizeLookup(
                             (layoutManager as GridLayoutManager).spanSizeLookup,
-                            field!!.getLoadingSpanSizeLookup(layoutManager),
+                            mPagination!!.getLoadingSpanSizeLookup(layoutManager),
                             mPaginationAdapter!!)
                     (layoutManager as GridLayoutManager).spanSizeLookup = mPaginationLookup
                 }
@@ -95,24 +120,6 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
             // RecyclerView (that triggers check) will occur
             checkEndOffset()
         }
-
-    var loadEnabled: Boolean = false
-        set(value) {
-            field = value
-            if (pagination != null) {
-                val temp = pagination
-                releasePagination()
-                pagination = temp
-            }
-        }
-    var loadThreshold: Int
-
-    init {
-        val a = context.obtainStyledAttributes(attrs, R.styleable.PaginatedRecyclerView, defStyle, 0)
-        loadEnabled = a.getBoolean(R.styleable.PaginatedRecyclerView_loadEnabled, true)
-        loadThreshold = a.getInteger(R.styleable.PaginatedRecyclerView_loadThreshold, 5)
-        a.recycle()
-    }
 
     open fun releasePagination() {
         removeOnScrollListener(mPaginationOnScrollListener)
@@ -126,7 +133,7 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
             val spanSizeLookup = mPaginationLookup!!.originalLookup
             (layoutManager as GridLayoutManager).spanSizeLookup = spanSizeLookup
         }
-        pagination = null
+        mPagination = null
         mPaginationAdapter = null
         mPaginationLookup = null
     }
@@ -140,40 +147,68 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
         // Check if end of the list is reached (counting threshold) or if there is no items at all
         val visibleItemCount = childCount
         val totalItemCount = layoutManager.itemCount
-        if (totalItemCount - visibleItemCount <= firstVisibleItemPosition + loadThreshold || totalItemCount == 0) {
-            // Call load more only if loading is not currently in progress and if there is more items to load
-            checkNotNull(pagination)
-            if (!pagination!!.mLoading && !pagination!!.isFinished(pagination!!.page)) {
-                pagination!!.load()
+        if (totalItemCount - visibleItemCount <= firstVisibleItemPosition + mLoadThreshold || totalItemCount == 0) {
+            // Call populatePage more only if loading is not currently in progress and if there is more items to populatePage
+            checkNotNull(mPagination)
+            if (!mPagination!!.mLoading && mPagination!!.onPreparePage(mPagination!!.mPage)) {
+                mPagination!!.populatePage()
             }
         }
     }
 
-    open fun setHasMoreDataToLoad(hasMoreDataToLoad: Boolean) {
-        mPaginationAdapter?.isDisplaying = hasMoreDataToLoad
-    }
+    abstract class Pagination @JvmOverloads constructor(initialPage: Int = 1, populateOnStart: Boolean = true) {
+        internal var mPage: Int = initialPage
+        internal var mLoading: Boolean = populateOnStart
 
-    abstract class Pagination @JvmOverloads constructor(
-            internal var page: Int = 1,
-            internal val loadOnStart: Boolean = true
-    ) {
-        internal var mLoading: Boolean = true
-
-        abstract fun isFinished(page: Int): Boolean
-
-        abstract fun onLoad(page: Int)
-
-        fun load() {
-            mLoading = true
-            onLoad(page++)
+        init {
+            if (populateOnStart) populatePage()
         }
 
-        fun notifyLoadCompleted() {
+        internal fun populatePage() {
+            notifyPopulateStarted()
+            onPopulatePage(mPage++)
+        }
+
+        abstract fun onPreparePage(page: Int): Boolean
+
+        abstract fun onPopulatePage(page: Int)
+
+        open val loadingAdapter: LoadingAdapter get() = LoadingAdapter.getDefault()
+
+        open fun getLoadingSpanSizeLookup(layout: RecyclerView.LayoutManager): GridLayoutManager.SpanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+            val spanSize = (layout as? GridLayoutManager)?.spanCount ?: 1
+            override fun getSpanSize(position: Int): Int = spanSize
+        }
+
+        fun notifyPopulateStarted() {
+            mLoading = true
+        }
+
+        fun notifyPopulateCompleted() {
             mLoading = false
         }
+    }
 
-        open val loadingAdapter: LoadingAdapter get() = LoadingAdapter.DEFAULT
+    abstract class LoadingAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        /** By default, there is no binding for loading row. Override this method otherwise. */
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {}
 
-        open fun getLoadingSpanSizeLookup(lm: RecyclerView.LayoutManager): LoadingSpanSizeLookup = LoadingSpanSizeLookup.getDefault(lm)
+        /** It doesn't matter if this adapter is empty, only [LoadingAdapter.onCreateViewHolder] and [LoadingAdapter.onBindViewHolder] will be called. */
+        override fun getItemCount(): Int = 0
+
+        companion object {
+            private var DEFAULT: LoadingAdapter? = null
+
+            internal fun getDefault(): LoadingAdapter {
+                if (DEFAULT == null) {
+                    DEFAULT = object : LoadingAdapter() {
+                        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
+                                object : RecyclerView.ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.paginated_loading_row, parent, false)) {
+                                }
+                    }
+                }
+                return DEFAULT!!
+            }
+        }
     }
 }

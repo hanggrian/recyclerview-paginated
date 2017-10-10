@@ -16,10 +16,8 @@ class PostAdapterGrid(context: Context) : PostAdapter<PostAdapterGrid.ViewHolder
 
     override fun getItemCount(): Int = list.size
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        list[position].let {
-            holder.textViewId.text = it.id.toString()
-        }
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) = list[position].let {
+        holder.textViewId.text = it.id.toString()
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
