@@ -22,26 +22,22 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        fun newPagination(adapter: PostAdapter<*>, useCustomLoadingAdapter: Boolean): PaginatedRecyclerView.Pagination = object : PaginatedRecyclerView.Pagination() {
-            override fun onPreparePage(page: Int): Boolean = page < 100
-
-            override fun onPopulatePage(page: Int) {
-                TypicodeServices.create()
-                        .posts(page)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe({ post ->
-                            notifyPopulateCompleted()
-                            adapter.add(post)
-                        }, {
-                            notifyPopulateCompleted()
-                        })
+        val PostAdapter<*>.newPagination: PaginatedRecyclerView.Pagination
+            get() = object : PaginatedRecyclerView.Pagination() {
+                override fun onPaginate(page: Int): Boolean {
+                    TypicodeServices.create()
+                            .posts(page)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe({ post ->
+                                notifyPopulateCompleted()
+                                add(post)
+                            }, {
+                                notifyPopulateCompleted()
+                            })
+                    return page < 50
+                }
             }
-
-            override val loadingAdapter: PaginatedRecyclerView.LoadingAdapter
-                get() = if (useCustomLoadingAdapter) CustomLoadingAdapter()
-                else super.loadingAdapter
-        }
     }
 
     private var toggle = false
@@ -67,7 +63,8 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.itemCustom -> {
                 item.isChecked = !item.isChecked
-                recyclerView.releasePagination()
+                recyclerView.loadingAdapter = if (item.isChecked) CustomLoadingAdapter() else PaginatedRecyclerView.LoadingAdapter.DEFAULT
+                recyclerView.pagination = null
                 populate()
             }
         }
@@ -82,13 +79,12 @@ class MainActivity : AppCompatActivity() {
             recyclerView.layoutManager = LinearLayoutManager(this)
             recyclerView.adapter = PostAdapterList(this)
         }
-        recyclerView.pagination = newPagination(recyclerView.adapter as PostAdapter, false)
+        recyclerView.pagination = (recyclerView.adapter as PostAdapter).newPagination
     }
 
-    class CustomLoadingAdapter : PaginatedRecyclerView.LoadingAdapter() {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
-                ViewHolder(parent.context.layoutInflater.inflate(R.layout.custom_loading_row, parent, false))
-
-        class ViewHolder(itemView: View?) : RecyclerView.ViewHolder(itemView)
+    class CustomLoadingAdapter : PaginatedRecyclerView.LoadingAdapter<ViewHolder>() {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder = ViewHolder(parent.context.layoutInflater.inflate(R.layout.custom_loading_row, parent, false))
     }
+
+    class ViewHolder(itemView: View?) : RecyclerView.ViewHolder(itemView)
 }

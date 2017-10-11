@@ -8,8 +8,8 @@ Usage
 -----
 #### Use `PaginatedRecyclerView`
 It has several attributes:
- * `loadEnabled` - Will enable loading row while paginating, default is true.
- * `loadThreshold` - Set the offset from the end of the list at which the populatePage more event needs to be triggered, default is 5.
+ * `loadingEnabled` - Will enable loading row while paginating, default is true.
+ * `loadingThreshold` - Set the offset from the end of the list at which the paginate more event needs to be triggered, default is 5.
 
 ```xml
 <com.hendraanggrian.widget.PaginatedRecyclerView
@@ -27,7 +27,7 @@ public class PostPagination extends PaginatedRecyclerView.Pagination {
     }
     
     @Override
-    public void onPopulatePage(int page) {
+    public void onPaginate(int page) {
         
     }
 }
