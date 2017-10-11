@@ -3,7 +3,7 @@ package com.hendraanggrian.widget
 import android.support.v7.widget.RecyclerView
 import android.view.ViewGroup
 
-internal class PaginatedAdapter(
+internal class PaginationAdapter(
         val actualAdapter: RecyclerView.Adapter<RecyclerView.ViewHolder>,
         val loadingAdapter: PaginatedRecyclerView.LoadingAdapter<RecyclerView.ViewHolder>
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {

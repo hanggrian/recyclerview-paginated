@@ -17,65 +17,57 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
 ) : RecyclerView(context, attrs, defStyle) {
 
     private var mPagination: Pagination? = null
-    private var mPaginatedAdapter: PaginatedAdapter? = null
-    private var mPaginatedLookup: PaginatedSpanSizeLookup? = null
-    private val mPaginatedOnScrollListener: RecyclerView.OnScrollListener = object : RecyclerView.OnScrollListener() {
+    private var mPaginationAdapter: PaginationAdapter? = null
+    private var mPaginationLookup: PaginationSpanSizeLookup? = null
+    private val mPaginationOnScrollListener: RecyclerView.OnScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) = checkEndOffset() // Each time when list is scrolled check if end of the list is reached
     }
-    private val mPaginatedObserver = object : RecyclerView.AdapterDataObserver() {
+    private val mPaginationObserver = object : RecyclerView.AdapterDataObserver() {
         override fun onChanged() {
-            checkNotNull(mPaginatedAdapter)
-            mPaginatedAdapter!!.notifyDataSetChanged()
-            onAdapterDataChanged()
+            mPaginationAdapter!!.notifyDataSetChanged()
+            notifyPagination()
         }
 
         override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-            checkNotNull(mPaginatedAdapter)
-            mPaginatedAdapter!!.notifyItemRangeInserted(positionStart, itemCount)
-            onAdapterDataChanged()
+            mPaginationAdapter!!.notifyItemRangeInserted(positionStart, itemCount)
+            notifyPagination()
         }
 
         override fun onItemRangeChanged(positionStart: Int, itemCount: Int) {
-            checkNotNull(mPaginatedAdapter)
-            mPaginatedAdapter!!.notifyItemRangeChanged(positionStart, itemCount)
-            onAdapterDataChanged()
+            mPaginationAdapter!!.notifyItemRangeChanged(positionStart, itemCount)
+            notifyPagination()
         }
 
         override fun onItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?) {
-            checkNotNull(mPaginatedAdapter)
-            mPaginatedAdapter!!.notifyItemRangeChanged(positionStart, itemCount, payload)
-            onAdapterDataChanged()
+            mPaginationAdapter!!.notifyItemRangeChanged(positionStart, itemCount, payload)
+            notifyPagination()
         }
 
         override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
-            checkNotNull(mPaginatedAdapter)
-            mPaginatedAdapter!!.notifyItemRangeRemoved(positionStart, itemCount)
-            onAdapterDataChanged()
+            mPaginationAdapter!!.notifyItemRangeRemoved(positionStart, itemCount)
+            notifyPagination()
         }
 
         override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
-            checkNotNull(mPaginatedAdapter)
-            mPaginatedAdapter!!.notifyItemMoved(fromPosition, toPosition)
-            onAdapterDataChanged()
+            mPaginationAdapter!!.notifyItemMoved(fromPosition, toPosition)
+            notifyPagination()
         }
 
-        private fun onAdapterDataChanged() {
-            checkNotNull(mPaginatedAdapter)
-            checkNotNull(mPagination)
-            mPaginatedAdapter!!.isDisplaying = !mPagination!!.isFinished
+        private fun notifyPagination() {
+            mPaginationAdapter!!.isDisplaying = !mPagination!!.isFinished
             checkEndOffset()
         }
     }
 
     private var mLoadingAdapter: LoadingAdapter<RecyclerView.ViewHolder>? = null
-    private var mPaginateThreshold: Int
+    private var mLoadingThreshold: Int
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.PaginatedRecyclerView, defStyle, 0)
         if (a.getBoolean(R.styleable.PaginatedRecyclerView_loadingEnabled, true)) {
             mLoadingAdapter = LoadingAdapter.DEFAULT
         }
-        mPaginateThreshold = a.getInteger(R.styleable.PaginatedRecyclerView_paginateThreshold, 5)
+        mLoadingThreshold = a.getInteger(R.styleable.PaginatedRecyclerView_loadingThreshold, 5)
         a.recycle()
     }
 
@@ -84,45 +76,44 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
         set(pagination) {
             if (pagination != null) {
                 mPagination = pagination
-                addOnScrollListener(mPaginatedOnScrollListener)
+                addOnScrollListener(mPaginationOnScrollListener)
                 if (mLoadingAdapter != null) {
                     // Wrap existing adapter with new adapter that will add loading row
                     val mAdapter = adapter
-                    mAdapter.registerAdapterDataObserver(mPaginatedObserver)
-                    mPaginatedAdapter = PaginatedAdapter(mAdapter, mLoadingAdapter!!)
-                    adapter = mPaginatedAdapter
+                    mAdapter.registerAdapterDataObserver(mPaginationObserver)
+                    mPaginationAdapter = PaginationAdapter(mAdapter, mLoadingAdapter!!)
+                    adapter = mPaginationAdapter
 
                     // For GridLayoutManager use separate/customisable span lookup for loading row
                     if (layoutManager is GridLayoutManager) {
-                        mPaginatedLookup = PaginatedSpanSizeLookup(
+                        mPaginationLookup = PaginationSpanSizeLookup(
                                 (layoutManager as GridLayoutManager).spanSizeLookup,
                                 object : GridLayoutManager.SpanSizeLookup() {
                                     override fun getSpanSize(position: Int): Int = (layoutManager as GridLayoutManager).spanCount
                                 },
-                                mPaginatedAdapter!!)
-                        (layoutManager as GridLayoutManager).spanSizeLookup = mPaginatedLookup
+                                mPaginationAdapter!!)
+                        (layoutManager as GridLayoutManager).spanSizeLookup = mPaginationLookup
                     }
                 }
                 // Trigger initial check since adapter might not have any items initially so no scrolling events upon
                 // RecyclerView (that triggers check) will occur
                 checkEndOffset()
             } else {
-                removeOnScrollListener(mPaginatedOnScrollListener)
-                if (adapter is PaginatedAdapter) {
-                    val paginatedAdapter = adapter as PaginatedAdapter
+                removeOnScrollListener(mPaginationOnScrollListener)
+                if (adapter is PaginationAdapter) {
+                    val paginatedAdapter = adapter as PaginationAdapter
                     val adapter = paginatedAdapter.actualAdapter
-                    adapter.unregisterAdapterDataObserver(mPaginatedObserver)
+                    adapter.unregisterAdapterDataObserver(mPaginationObserver)
                     setAdapter(adapter)
                 }
-                if (layoutManager is GridLayoutManager && mPaginatedLookup != null) {
-                    (layoutManager as GridLayoutManager).spanSizeLookup = mPaginatedLookup!!.originalLookup
+                if (layoutManager is GridLayoutManager && mPaginationLookup != null) {
+                    (layoutManager as GridLayoutManager).spanSizeLookup = mPaginationLookup!!.originalLookup
                 }
                 mPagination = null
-                mPaginatedAdapter = null
-                mPaginatedLookup = null
+                mPaginationAdapter = null
+                mPaginationLookup = null
             }
         }
-
 
     @Suppress("UNCHECKED_CAST")
     open var loadingAdapter: LoadingAdapter<out RecyclerView.ViewHolder>?
@@ -132,14 +123,14 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
             if (mPagination != null) {
                 val temp = mPagination
                 pagination = null
-                mPagination = temp
+                pagination = temp
             }
         }
 
-    open var paginateThreshold: Int
-        get() = mPaginateThreshold
+    open var loadingThreshold: Int
+        get() = mLoadingThreshold
         set(threshold) {
-            mPaginateThreshold = threshold
+            mLoadingThreshold = threshold
         }
 
     private fun checkEndOffset() {
@@ -151,9 +142,8 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
         // Check if end of the list is reached (counting threshold) or if there is no items at all
         val visibleItemCount = childCount
         val totalItemCount = layoutManager.itemCount
-        if (totalItemCount - visibleItemCount <= firstVisibleItemPosition + mPaginateThreshold || totalItemCount == 0) {
+        if (totalItemCount - visibleItemCount <= firstVisibleItemPosition + mLoadingThreshold || totalItemCount == 0) {
             // Call paginate more only if loading is not currently in progress and if there is more items to paginate
-            checkNotNull(mPagination)
             if (!mPagination!!.isLoading && !mPagination!!.isFinished) {
                 mPagination!!.paginate()
             }
@@ -161,6 +151,12 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
     }
 
     abstract class Pagination {
+        /** Returns the initial page of which pagination should start to. */
+        open fun getPageStart(): Int = 1
+
+        /** Where the logic of data population should be. Returns true to indicate whether pagination should continue. */
+        abstract fun onPaginate(page: Int): Boolean
+
         private var mPage: Int = getPageStart()
         private var mLoading: Boolean = true
         private var mFinished: Boolean = false
@@ -169,20 +165,14 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
             paginate()
         }
 
-        val page: Int get() = mPage
-        val isLoading: Boolean get() = mLoading
-        val isFinished: Boolean get() = mFinished
-
-        /** Returns the initial page of which pagination should start to. */
-        open fun getPageStart(): Int = 1
-
-        /** Where the logic of data population should be. Returns true to indicate whether pagination should continue. */
-        abstract fun onPaginate(page: Int): Boolean
-
         internal fun paginate() {
             notifyPopulateStarted()
             mFinished = !onPaginate(mPage++)
         }
+
+        val page: Int get() = mPage
+        val isLoading: Boolean get() = mLoading
+        val isFinished: Boolean get() = mFinished
 
         fun notifyPopulateStarted() {
             mLoading = true

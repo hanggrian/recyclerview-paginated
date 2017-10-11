@@ -22,13 +22,13 @@ It has several attributes:
 ```java
 public class PostPagination extends PaginatedRecyclerView.Pagination {
     @Override
-    public boolean onPreparePage(int page) {
-        return true;
+    public boolean getPageStart(int page) {
+        return 0;
     }
     
     @Override
     public void onPaginate(int page) {
-        
+        return true;
     }
 }
 ```
@@ -74,7 +74,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.hendraanggrian:recyclerview-paginated:0.3'
+    compile 'com.hendraanggrian:recyclerview-paginated:0.4'
 }
 ```
 

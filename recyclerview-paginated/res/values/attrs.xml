@@ -5,6 +5,6 @@
         <attr name="loadingEnabled" format="boolean" />
 
         <!-- Set the offset from the end of the list at whonPaginatePage event needs to be triggered, default is 5. -->
-        <attr name="paginateThreshold" format="integer" />
+        <attr name="loadingThreshold" format="integer" />
     </declare-styleable>
 </resources>
