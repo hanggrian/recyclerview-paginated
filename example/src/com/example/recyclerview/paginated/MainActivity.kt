@@ -24,18 +24,18 @@ class MainActivity : AppCompatActivity() {
     companion object {
         val PostAdapter<*>.newPagination: PaginatedRecyclerView.Pagination
             get() = object : PaginatedRecyclerView.Pagination() {
-                override fun onPaginate(page: Int): Boolean {
+                override fun onPaginate(page: Int) {
                     TypicodeServices.create()
                             .posts(page)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe({ post ->
-                                notifyPopulateCompleted()
+                                notifyLoadingCompleted()
                                 add(post)
                             }, {
-                                notifyPopulateCompleted()
+                                notifyPaginationFinished()
                             })
-                    return page < 50
+                    if (page == 50) notifyPaginationFinished()
                 }
             }
     }

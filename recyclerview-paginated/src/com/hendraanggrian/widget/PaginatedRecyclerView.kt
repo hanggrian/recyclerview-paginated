@@ -10,6 +10,10 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.hendraanggrian.recyclerview.paginated.R
 
+/**
+ * Essentially a [RecyclerView] with endless scrolling support.
+ * To enable and configure endless scrolling behavior, [Pagination] needs to be implemented and finally supplied to this [RecyclerView].
+ */
 open class PaginatedRecyclerView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
@@ -20,42 +24,43 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
     private var mPaginationAdapter: PaginationAdapter? = null
     private var mPaginationLookup: PaginationSpanSizeLookup? = null
     private val mPaginationOnScrollListener: RecyclerView.OnScrollListener = object : RecyclerView.OnScrollListener() {
-        override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) = checkEndOffset() // Each time when list is scrolled check if end of the list is reached
+        // Each time when list is scrolled check if end of the list is reached
+        override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) = calculateEndOffset()
     }
-    private val mPaginationObserver = object : RecyclerView.AdapterDataObserver() {
+    private val mPaginationObserver: RecyclerView.AdapterDataObserver = object : RecyclerView.AdapterDataObserver() {
         override fun onChanged() {
             mPaginationAdapter!!.notifyDataSetChanged()
-            notifyPagination()
+            updatePagination()
         }
 
         override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
             mPaginationAdapter!!.notifyItemRangeInserted(positionStart, itemCount)
-            notifyPagination()
+            updatePagination()
         }
 
         override fun onItemRangeChanged(positionStart: Int, itemCount: Int) {
             mPaginationAdapter!!.notifyItemRangeChanged(positionStart, itemCount)
-            notifyPagination()
+            updatePagination()
         }
 
         override fun onItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?) {
             mPaginationAdapter!!.notifyItemRangeChanged(positionStart, itemCount, payload)
-            notifyPagination()
+            updatePagination()
         }
 
         override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
             mPaginationAdapter!!.notifyItemRangeRemoved(positionStart, itemCount)
-            notifyPagination()
+            updatePagination()
         }
 
         override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
             mPaginationAdapter!!.notifyItemMoved(fromPosition, toPosition)
-            notifyPagination()
+            updatePagination()
         }
 
-        private fun notifyPagination() {
+        private fun updatePagination() {
             mPaginationAdapter!!.isDisplaying = !mPagination!!.isFinished
-            checkEndOffset()
+            calculateEndOffset()
         }
     }
 
@@ -71,6 +76,7 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
         a.recycle()
     }
 
+    /** Setter and getter of [Pagination]. */
     open var pagination: Pagination?
         get() = mPagination
         set(pagination) {
@@ -97,7 +103,7 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
                 }
                 // Trigger initial check since adapter might not have any items initially so no scrolling events upon
                 // RecyclerView (that triggers check) will occur
-                checkEndOffset()
+                calculateEndOffset()
             } else {
                 removeOnScrollListener(mPaginationOnScrollListener)
                 if (adapter is PaginationAdapter) {
@@ -115,6 +121,7 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
             }
         }
 
+    /** Mimicking [setAdapter] and [getAdapter], it sets adapter for loading row. [LoadingAdapter.DEFAULT] is used by default. */
     @Suppress("UNCHECKED_CAST")
     open var loadingAdapter: LoadingAdapter<out RecyclerView.ViewHolder>?
         get() = mLoadingAdapter
@@ -127,13 +134,14 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
             }
         }
 
+    /** Tells scrolling listener to start to load next page when you have scrolled to n items from last item. */
     open var loadingThreshold: Int
         get() = mLoadingThreshold
         set(threshold) {
             mLoadingThreshold = threshold
         }
 
-    private fun checkEndOffset() {
+    private fun calculateEndOffset() {
         val firstVisibleItemPosition: Int = when (layoutManager) {
             is LinearLayoutManager -> (layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
             is StaggeredGridLayoutManager -> if (layoutManager.childCount > 0) (layoutManager as StaggeredGridLayoutManager).findFirstVisibleItemPositions(null)[0] else 0 // https://code.google.com/p/android/issues/detail?id=181461
@@ -150,48 +158,66 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
         }
     }
 
+    /** Class that controls pagination behavior of [RecyclerView], much like [RecyclerView.Adapter] controlling item view behavior. */
     abstract class Pagination {
-        /** Returns the initial page of which pagination should start to. */
-        open fun getPageStart(): Int = 1
-
-        /** Where the logic of data population should be. Returns true to indicate whether pagination should continue. */
-        abstract fun onPaginate(page: Int): Boolean
-
         private var mPage: Int = getPageStart()
         private var mLoading: Boolean = true
         private var mFinished: Boolean = false
+
+        /** Returns the initial page of which pagination should start to. */
+        open fun getPageStart(): Int = 1
+
+        /** Where the logic of data population should be. */
+        abstract fun onPaginate(page: Int)
 
         init {
             paginate()
         }
 
         internal fun paginate() {
-            notifyPopulateStarted()
-            mFinished = !onPaginate(mPage++)
+            notifyLoadingStarted()
+            onPaginate(mPage++)
         }
 
+        /** Returns current page of this pagination. */
         val page: Int get() = mPage
+
+        /** Indicates whether or not this pagination is currently loading. */
         val isLoading: Boolean get() = mLoading
+
+        /** Indicated whether or not this pagination has successfully loaded all items. */
         val isFinished: Boolean get() = mFinished
 
-        fun notifyPopulateStarted() {
+        /** Notify this pagination that a loading has started and should display a loading row. */
+        fun notifyLoadingStarted() {
             mLoading = true
         }
 
-        fun notifyPopulateCompleted() {
+        /** Notify this pagination that loading has completed therefore loading row should be hidden. */
+        fun notifyLoadingCompleted() {
             mLoading = false
+        }
+
+        /** Notify this pagination that it has successfully loaded all items and should not attempt to load any more. */
+        fun notifyPaginationFinished() {
+            mFinished = true
         }
     }
 
+    /**
+     * Base loading adapter that will be displayed when pagination is in progress.
+     * When extending this class, only [LoadingAdapter.onCreateViewHolder] and [LoadingAdapter.onBindViewHolder] is relevant and should be implemented.
+     */
     abstract class LoadingAdapter<VH : RecyclerView.ViewHolder> : RecyclerView.Adapter<VH>() {
         /** By default, there is no binding for loading row. Override this method otherwise. */
         override fun onBindViewHolder(holder: VH, position: Int) {}
 
-        /** It doesn't matter if this adapter is empty, only [LoadingAdapter.onCreateViewHolder] and [LoadingAdapter.onBindViewHolder] will be called. */
+        /** It doesn't matter if this adapter is empty, loading adapter is always only displayed as 1 item. */
         override fun getItemCount(): Int = 0
 
         companion object {
-            val DEFAULT = object : LoadingAdapter<RecyclerView.ViewHolder>() {
+            /** Default [LoadingAdapter], which is just an indeterminate [android.widget.ProgressBar]. */
+            val DEFAULT: LoadingAdapter<RecyclerView.ViewHolder> = object : LoadingAdapter<RecyclerView.ViewHolder>() {
                 override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
                         object : RecyclerView.ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.paginated_loading_row, parent, false)) {
                         }

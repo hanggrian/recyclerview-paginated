@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="PaginatedRecyclerView">
-        <!-- Will display loading adapter while paginating, default is true. -->
+        <!-- Will set default loading adapter, default is true. -->
         <attr name="loadingEnabled" format="boolean" />
-
-        <!-- Set the offset from the end of the list at whonPaginatePage event needs to be triggered, default is 5. -->
+        <!-- Set the offset from the end of the list at which onPaginatePage event needs to be triggered, default is 5. -->
         <attr name="loadingThreshold" format="integer" />
     </declare-styleable>
 </resources>

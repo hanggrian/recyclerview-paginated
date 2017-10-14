@@ -22,7 +22,7 @@ android {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$versions.kotlin"
-    compile "com.android.support:recyclerview-v7:$versions.support"
+    provided "com.android.support:recyclerview-v7:$versions.support"
 }
 
 publish {

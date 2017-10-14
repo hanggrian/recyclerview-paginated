@@ -29,8 +29,8 @@ public class MainActivity2 extends AppCompatActivity {
             }
 
             @Override
-            public boolean onPaginate(int page) {
-                return false;
+            public void onPaginate(int page) {
+
             }
         };
     }

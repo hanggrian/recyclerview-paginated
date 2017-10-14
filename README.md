@@ -28,7 +28,13 @@ public class PostPagination extends PaginatedRecyclerView.Pagination {
     
     @Override
     public void onPaginate(int page) {
-        return true;
+        if (loadItemSuccess) {
+            populateItems(); // add items to adapter
+            notifyLoadingCompleted();
+        }
+        if (reachPageEnd) {
+            notifyPaginationFinished();
+        }
     }
 }
 ```
@@ -43,7 +49,7 @@ recyclerView.setPagination(pagination)
 Customization
 -------------
 #### Use custom loading row
-Create custom loading adapter.
+Create custom loading adapter, and supply it to `PaginatedRecyclerView`.
 ```java
 public class CustomLoadingAdapter extends LoadingAdapter {
 
@@ -52,17 +58,9 @@ public class CustomLoadingAdapter extends LoadingAdapter {
         ...
     }
 }
-```
 
-When creating `Pagination`, override `getLoadingAdpater()` to use this custom adapter.
-```java
-public class MyPagination extends PaginatedRecyclerView.Pagination {
-
-    @Override
-    public LoadingAdapter getLoadingAdapter() {
-        return new CustomLoadingAdapter();
-    }
-}
+CustomLoadingAdapter loadingAdapter = new CustomLoadingAdapter();
+recyclerView.setLoadingAdapter(loadingAdapter);
 ```
 
 Download

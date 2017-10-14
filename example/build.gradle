@@ -1,18 +1,17 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-apply plugin: 'kotlin-kapt'
 
 ext {
-    kota = '0.8.0'
+    kota = '0.9'
     circleImageView = '2.1.0'
-    rxjava2 = [
-            'rxandroid': '2.0.1',
-            'rxjava'   : '2.1.0'
+    rx = [
+            'android': '2.0.1',
+            'java'   : '2.1.0'
     ]
     square = [
-            retrofit2: '2.3.0',
-            okhttp3  : '3.8.1'
+            retrofit: '2.3.0',
+            okhttp  : '3.8.1'
     ]
 }
 
@@ -46,12 +45,6 @@ android {
     }
 }
 
-repositories {
-    google()
-    jcenter()
-    maven { url 'https://dl.bintray.com/hendraanggrian/maven' }
-}
-
 dependencies {
     implementation project(':recyclerview-paginated')
     implementation "com.android.support:appcompat-v7:$versions.support"
@@ -64,12 +57,12 @@ dependencies {
 
     implementation "de.hdodenhof:circleimageview:$circleImageView"
 
-    implementation "io.reactivex.rxjava2:rxandroid:$rxjava2.rxandroid"
-    implementation "io.reactivex.rxjava2:rxjava:$rxjava2.rxjava"
+    implementation "io.reactivex.rxjava2:rxandroid:$rx.android"
+    implementation "io.reactivex.rxjava2:rxjava:$rx.java"
 
-    implementation "com.squareup.retrofit2:retrofit:$square.retrofit2"
-    implementation "com.squareup.retrofit2:adapter-rxjava2:$square.retrofit2"
-    implementation "com.squareup.retrofit2:converter-gson:$square.retrofit2"
-    implementation "com.squareup.okhttp3:okhttp:$square.okhttp3"
-    implementation "com.squareup.okhttp3:logging-interceptor:$square.okhttp3"
+    implementation "com.squareup.retrofit2:retrofit:$square.retrofit"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$square.retrofit"
+    implementation "com.squareup.retrofit2:converter-gson:$square.retrofit"
+    implementation "com.squareup.okhttp3:okhttp:$square.okhttp"
+    implementation "com.squareup.okhttp3:logging-interceptor:$square.okhttp"
 }
