@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.hendraanggrian.recyclerview.paginated.R
+import com.hendraanggrian.widget.PaginatedRecyclerView.Pagination
 
 /**
  * Essentially a [RecyclerView] with endless scrolling support.
@@ -90,6 +91,8 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
                     mPaginationAdapter = PaginationAdapter(mAdapter, mLoadingAdapter!!)
                     adapter = mPaginationAdapter
 
+                    mPagination!!.finishLoading {  mPaginationAdapter!!.isDisplaying = false }
+
                     // For GridLayoutManager use separate/customisable span lookup for loading row
                     if (layoutManager is GridLayoutManager) {
                         mPaginationLookup = PaginationSpanSizeLookup(
@@ -163,6 +166,7 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
         private var mPage: Int = getPageStart()
         private var mLoading: Boolean = true
         private var mFinished: Boolean = false
+        private var mFinishLoading: (() -> Unit)? = null
 
         /** Returns the initial page of which pagination should start to. */
         open fun getPageStart(): Int = 1
@@ -177,6 +181,10 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
         internal fun paginate() {
             notifyLoadingStarted()
             onPaginate(mPage++)
+        }
+
+        internal fun finishLoading(block: () -> Unit) {
+            mFinishLoading = block
         }
 
         /** Returns current page of this pagination. */
@@ -201,6 +209,7 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
         /** Notify this pagination that it has successfully loaded all items and should not attempt to load any more. */
         fun notifyPaginationFinished() {
             mFinished = true
+            mFinishLoading!!()
         }
     }
 
