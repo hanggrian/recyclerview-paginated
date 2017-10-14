@@ -1,6 +1,6 @@
 package com.example.recyclerview.paginated
 
-import io.reactivex.Observable
+import io.reactivex.Single
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -37,6 +37,6 @@ object TypicodeServices {
     interface Service {
 
         @GET("posts/{id}")
-        fun posts(@Path("id") id: Int): Observable<Post>
+        fun posts(@Path("id") id: Int): Single<Post>
     }
 }

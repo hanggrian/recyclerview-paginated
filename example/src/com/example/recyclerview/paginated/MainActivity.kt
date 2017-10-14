@@ -32,9 +32,9 @@ class MainActivity : AppCompatActivity() {
                             .subscribe({ post ->
                                 notifyLoadingCompleted()
                                 add(post)
-                            }, {
+                            }) {
                                 notifyPaginationFinished()
-                            })
+                            }
                     if (page == 50) notifyPaginationFinished()
                 }
             }

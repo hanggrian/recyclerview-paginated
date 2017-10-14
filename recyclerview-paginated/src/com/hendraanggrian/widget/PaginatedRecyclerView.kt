@@ -30,35 +30,35 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
     private val mPaginationObserver: RecyclerView.AdapterDataObserver = object : RecyclerView.AdapterDataObserver() {
         override fun onChanged() {
             mPaginationAdapter!!.notifyDataSetChanged()
-            updatePagination()
+            calculatePagination()
         }
 
         override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
             mPaginationAdapter!!.notifyItemRangeInserted(positionStart, itemCount)
-            updatePagination()
+            calculatePagination()
         }
 
         override fun onItemRangeChanged(positionStart: Int, itemCount: Int) {
             mPaginationAdapter!!.notifyItemRangeChanged(positionStart, itemCount)
-            updatePagination()
+            calculatePagination()
         }
 
         override fun onItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?) {
             mPaginationAdapter!!.notifyItemRangeChanged(positionStart, itemCount, payload)
-            updatePagination()
+            calculatePagination()
         }
 
         override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
             mPaginationAdapter!!.notifyItemRangeRemoved(positionStart, itemCount)
-            updatePagination()
+            calculatePagination()
         }
 
         override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
             mPaginationAdapter!!.notifyItemMoved(fromPosition, toPosition)
-            updatePagination()
+            calculatePagination()
         }
 
-        private fun updatePagination() {
+        private fun calculatePagination() {
             mPaginationAdapter!!.isDisplaying = !mPagination!!.isFinished
             calculateEndOffset()
         }
