@@ -81,9 +81,11 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
     open var pagination: Pagination?
         get() = mPagination
         set(pagination) {
+            check(layoutManager != null, { "LayoutManager must be initialized before Pagination!" })
             check(adapter != null, { "Adapter must be initialized before Pagination!" })
             if (pagination != null) {
                 mPagination = pagination
+                mPagination!!.paginate()
                 addOnScrollListener(mPaginationOnScrollListener)
                 if (mLoadingAdapter != null) {
                     // Wrap existing adapter with new adapter that will add loading row
@@ -174,10 +176,6 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
 
         /** Where the logic of data population should be. */
         abstract fun onPaginate(page: Int)
-
-        init {
-            paginate()
-        }
 
         internal fun paginate() {
             notifyLoadingStarted()
