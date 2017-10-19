@@ -81,6 +81,7 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
     open var pagination: Pagination?
         get() = mPagination
         set(pagination) {
+            check(adapter != null, { "Adapter must be initialized before Pagination!" })
             if (pagination != null) {
                 mPagination = pagination
                 addOnScrollListener(mPaginationOnScrollListener)
@@ -166,7 +167,7 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
         private var mPage: Int = getPageStart()
         private var mLoading: Boolean = true
         private var mFinished: Boolean = false
-        private var mFinishLoading: (() -> Unit)? = null
+        private lateinit var mFinishLoading: () -> Unit
 
         /** Returns the initial page of which pagination should start to. */
         open fun getPageStart(): Int = 1
@@ -209,7 +210,7 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
         /** Notify this pagination that it has successfully loaded all items and should not attempt to load any more. */
         fun notifyPaginationFinished() {
             mFinished = true
-            mFinishLoading!!()
+            mFinishLoading()
         }
 
         fun notifyPaginationReset() {
