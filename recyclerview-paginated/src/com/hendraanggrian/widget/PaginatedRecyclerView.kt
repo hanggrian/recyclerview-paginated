@@ -22,7 +22,7 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
 ) : RecyclerView(context, attrs, defStyle) {
 
     private var mPagination: Pagination? = null
-    private var mPaginationAdapter: PaginationAdapter? = null
+    private var mAdapterWrapper: PaginationAdapterWrapper? = null
     private var mPaginationLookup: PaginationSpanSizeLookup? = null
     private val mPaginationOnScrollListener: RecyclerView.OnScrollListener = object : RecyclerView.OnScrollListener() {
         // Each time when list is scrolled check if end of the list is reached
@@ -30,37 +30,37 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
     }
     private val mPaginationObserver: RecyclerView.AdapterDataObserver = object : RecyclerView.AdapterDataObserver() {
         override fun onChanged() {
-            mPaginationAdapter!!.notifyDataSetChanged()
+            mAdapterWrapper!!.notifyDataSetChanged()
             calculatePagination()
         }
 
         override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-            mPaginationAdapter!!.notifyItemRangeInserted(positionStart, itemCount)
+            mAdapterWrapper!!.notifyItemRangeInserted(positionStart, itemCount)
             calculatePagination()
         }
 
         override fun onItemRangeChanged(positionStart: Int, itemCount: Int) {
-            mPaginationAdapter!!.notifyItemRangeChanged(positionStart, itemCount)
+            mAdapterWrapper!!.notifyItemRangeChanged(positionStart, itemCount)
             calculatePagination()
         }
 
         override fun onItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?) {
-            mPaginationAdapter!!.notifyItemRangeChanged(positionStart, itemCount, payload)
+            mAdapterWrapper!!.notifyItemRangeChanged(positionStart, itemCount, payload)
             calculatePagination()
         }
 
         override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
-            mPaginationAdapter!!.notifyItemRangeRemoved(positionStart, itemCount)
+            mAdapterWrapper!!.notifyItemRangeRemoved(positionStart, itemCount)
             calculatePagination()
         }
 
         override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
-            mPaginationAdapter!!.notifyItemMoved(fromPosition, toPosition)
+            mAdapterWrapper!!.notifyItemMoved(fromPosition, toPosition)
             calculatePagination()
         }
 
         private fun calculatePagination() {
-            mPaginationAdapter!!.isDisplaying = !mPagination!!.isFinished
+            mAdapterWrapper!!.isDisplaying = !mPagination!!.isFinished
             calculateEndOffset()
         }
     }
@@ -88,10 +88,10 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
                     // Wrap existing adapter with new adapter that will add loading row
                     val mAdapter = adapter
                     mAdapter.registerAdapterDataObserver(mPaginationObserver)
-                    mPaginationAdapter = PaginationAdapter(mAdapter, mLoadingAdapter!!)
-                    adapter = mPaginationAdapter
+                    mAdapterWrapper = PaginationAdapterWrapper(mAdapter, mLoadingAdapter!!)
+                    adapter = mAdapterWrapper
 
-                    mPagination!!.finishLoading {  mPaginationAdapter!!.isDisplaying = false }
+                    mPagination!!.finishLoading { mAdapterWrapper!!.isDisplaying = false }
 
                     // For GridLayoutManager use separate/customisable span lookup for loading row
                     if (layoutManager is GridLayoutManager) {
@@ -100,7 +100,7 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
                                 object : GridLayoutManager.SpanSizeLookup() {
                                     override fun getSpanSize(position: Int): Int = (layoutManager as GridLayoutManager).spanCount
                                 },
-                                mPaginationAdapter!!)
+                                mAdapterWrapper!!)
                         (layoutManager as GridLayoutManager).spanSizeLookup = mPaginationLookup
                     }
                 }
@@ -109,8 +109,8 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
                 calculateEndOffset()
             } else {
                 removeOnScrollListener(mPaginationOnScrollListener)
-                if (adapter is PaginationAdapter) {
-                    val paginatedAdapter = adapter as PaginationAdapter
+                if (adapter is PaginationAdapterWrapper) {
+                    val paginatedAdapter = adapter as PaginationAdapterWrapper
                     val adapter = paginatedAdapter.actualAdapter
                     adapter.unregisterAdapterDataObserver(mPaginationObserver)
                     setAdapter(adapter)
@@ -119,7 +119,7 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
                     (layoutManager as GridLayoutManager).spanSizeLookup = mPaginationLookup!!.originalLookup
                 }
                 mPagination = null
-                mPaginationAdapter = null
+                mAdapterWrapper = null
                 mPaginationLookup = null
             }
         }
@@ -210,6 +210,12 @@ open class PaginatedRecyclerView @JvmOverloads constructor(
         fun notifyPaginationFinished() {
             mFinished = true
             mFinishLoading!!()
+        }
+
+        fun notifyPaginationReset() {
+            mFinished = false
+            mPage = getPageStart()
+            paginate()
         }
     }
 

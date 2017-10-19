@@ -3,11 +3,11 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 ext {
-    kota = '0.9'
+    kota = '0.12'
     circleImageView = '2.1.0'
     rx = [
             'android': '2.0.1',
-            'java'   : '2.1.0'
+            'java'   : '2.1.5'
     ]
     square = [
             retrofit: '2.3.0',
@@ -47,13 +47,16 @@ android {
 
 dependencies {
     implementation project(':recyclerview-paginated')
+
     implementation "com.android.support:appcompat-v7:$versions.support"
+    implementation "com.android.support:recyclerview-v7:$versions.support"
     implementation "com.android.support:cardview-v7:$versions.support"
     implementation "com.android.support:design:$versions.support"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre8:$versions.kotlin"
     implementation "com.hendraanggrian:kota:$kota"
     implementation "com.hendraanggrian:kota-support-v4:$kota"
+    implementation "com.hendraanggrian:kota-recyclerview-v7:$kota"
 
     implementation "de.hdodenhof:circleimageview:$circleImageView"
 

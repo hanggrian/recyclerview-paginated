@@ -5,10 +5,10 @@ import android.support.v7.widget.GridLayoutManager
 internal class PaginationSpanSizeLookup(
         val originalLookup: GridLayoutManager.SpanSizeLookup,
         val loadingLookup: GridLayoutManager.SpanSizeLookup,
-        val paginationAdapter: PaginationAdapter
+        val paginationAdapterWrapper: PaginationAdapterWrapper
 ) : GridLayoutManager.SpanSizeLookup() {
 
     override fun getSpanSize(position: Int): Int =
-            if (paginationAdapter.isLoadingRow(position)) loadingLookup.getSpanSize(position)
+            if (paginationAdapterWrapper.isLoadingRow(position)) loadingLookup.getSpanSize(position)
             else originalLookup.getSpanSize(position)
 }

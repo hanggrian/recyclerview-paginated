@@ -2,8 +2,6 @@ package com.example.recyclerview.paginated
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
@@ -11,9 +9,13 @@ import android.view.View
 import android.view.ViewGroup
 import com.hendraanggrian.widget.PaginatedRecyclerView
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import kota.contents.getDrawable2
+import kota.collections.with
 import kota.layoutInflater
+import kota.resources.getDrawable2
+import kota.setGridLayoutManager
+import kota.setLinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 
 /**
@@ -21,32 +23,34 @@ import kotlinx.android.synthetic.main.activity_main.*
  */
 class MainActivity : AppCompatActivity() {
 
-    companion object {
-        val PostAdapter<*>.newPagination: PaginatedRecyclerView.Pagination
-            get() = object : PaginatedRecyclerView.Pagination() {
-                override fun onPaginate(page: Int) {
-                    TypicodeServices.create()
-                            .posts(page)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe({ post ->
-                                notifyLoadingCompleted()
-                                add(post)
-                            }) {
-                                notifyPaginationFinished()
-                            }
-                    if (page == 50) notifyPaginationFinished()
-                }
-            }
-    }
-
-    private var toggle = false
+    private var toggle: Boolean = false
+    private val list: MutableList<Post> = mutableListOf()
+    private var adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>? = null
+    private val disposables: MutableList<Disposable> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        populate()
+
+        adapter = PostAdapter(list)
+        recyclerView.adapter = adapter
+        recyclerView.setLinearLayoutManager()
+        recyclerView.pagination = object : PaginatedRecyclerView.Pagination() {
+            override fun onPaginate(page: Int) {
+                disposables.add(TypicodeServices.create()
+                        .posts(page)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe({ post ->
+                            notifyLoadingCompleted()
+                            (list with adapter!!).add(post)
+                        }) {
+                            notifyPaginationFinished()
+                        })
+                if (page == 50) notifyPaginationFinished()
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -58,28 +62,24 @@ class MainActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.itemToggle -> {
                 toggle = !toggle
-                item.icon = getDrawable2(if (toggle) R.drawable.ic_view_module_black_24dp else R.drawable.ic_view_list_black_24dp)
-                populate()
+                if (toggle) {
+                    item.icon = getDrawable2(R.drawable.ic_view_module_black_24dp)
+                    recyclerView.setGridLayoutManager(3)
+                } else {
+                    item.icon = getDrawable2(R.drawable.ic_view_list_black_24dp)
+                    recyclerView.setLinearLayoutManager()
+                }
             }
             R.id.itemCustom -> {
                 item.isChecked = !item.isChecked
                 recyclerView.loadingAdapter = if (item.isChecked) CustomLoadingAdapter() else PaginatedRecyclerView.LoadingAdapter.DEFAULT
-                recyclerView.pagination = null
-                populate()
             }
         }
+        (list with adapter!!).clear()
+        disposables.forEach { it.dispose() }
+        disposables.clear()
+        recyclerView.pagination!!.notifyPaginationReset()
         return super.onOptionsItemSelected(item)
-    }
-
-    private fun populate() {
-        if (toggle) {
-            recyclerView.layoutManager = GridLayoutManager(this, 3)
-            recyclerView.adapter = PostAdapterGrid(this)
-        } else {
-            recyclerView.layoutManager = LinearLayoutManager(this)
-            recyclerView.adapter = PostAdapterList(this)
-        }
-        recyclerView.pagination = (recyclerView.adapter as PostAdapter).newPagination
     }
 
     class CustomLoadingAdapter : PaginatedRecyclerView.LoadingAdapter<ViewHolder>() {
