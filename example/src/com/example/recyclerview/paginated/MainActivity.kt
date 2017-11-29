@@ -2,6 +2,8 @@ package com.example.recyclerview.paginated
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.GridLayoutManager
+import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.Menu
 import android.view.MenuItem
@@ -11,16 +13,12 @@ import com.hendraanggrian.widget.PaginatedRecyclerView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import kota.collections.with
+import kota.collections.add
+import kota.collections.clear
 import kota.layoutInflater
 import kota.resources.getDrawable2
-import kota.setGridLayoutManager
-import kota.setLinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 
-/**
- * @author Hendra Anggrian (hendraanggrian@gmail.com)
- */
 class MainActivity : AppCompatActivity() {
 
     private var toggle: Boolean = false
@@ -35,7 +33,7 @@ class MainActivity : AppCompatActivity() {
 
         adapter = PostAdapter(list)
         recyclerView.adapter = adapter
-        recyclerView.setLinearLayoutManager()
+        recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.pagination = object : PaginatedRecyclerView.Pagination() {
             override fun onPaginate(page: Int) {
                 disposables.add(TypicodeServices.create()
@@ -44,7 +42,7 @@ class MainActivity : AppCompatActivity() {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe({ post ->
                             notifyLoadingCompleted()
-                            (list with adapter!!).add(post)
+                            list.add(post, adapter!!)
                         }) {
                             notifyPaginationFinished()
                         })
@@ -64,10 +62,10 @@ class MainActivity : AppCompatActivity() {
                 toggle = !toggle
                 if (toggle) {
                     item.icon = getDrawable2(R.drawable.ic_view_module_black_24dp)
-                    recyclerView.setGridLayoutManager(3)
+                    recyclerView.layoutManager = GridLayoutManager(this, 3)
                 } else {
                     item.icon = getDrawable2(R.drawable.ic_view_list_black_24dp)
-                    recyclerView.setLinearLayoutManager()
+                    recyclerView.layoutManager = LinearLayoutManager(this)
                 }
             }
             R.id.itemCustom -> {
@@ -75,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                 recyclerView.loadingAdapter = if (item.isChecked) CustomLoadingAdapter() else PaginatedRecyclerView.LoadingAdapter.DEFAULT
             }
         }
-        (list with adapter!!).clear()
+        list.clear(adapter!!)
         disposables.forEach { it.dispose() }
         disposables.clear()
         recyclerView.pagination!!.notifyPaginationReset()

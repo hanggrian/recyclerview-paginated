@@ -6,9 +6,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import kota.layoutInflater
 
-/**
- * @author Hendra Anggrian (hendraanggrian@gmail.com)
- */
 class PostAdapter(val list: List<Post>) : RecyclerView.Adapter<PostAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder = ViewHolder(parent.context.layoutInflater.inflate(R.layout.item_post, parent, false))

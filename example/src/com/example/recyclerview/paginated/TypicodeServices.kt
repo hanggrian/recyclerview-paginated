@@ -9,9 +9,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 
-/**
- * @author Hendra Anggrian (hendraanggrian@gmail.com)
- */
 object TypicodeServices {
 
     private const val API = "https://jsonplaceholder.typicode.com/"

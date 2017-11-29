@@ -1,1 +1,2 @@
-include ':recyclerview-paginated', ':example'
+include ':recyclerview-paginated'
+include ':example'
