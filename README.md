@@ -1,8 +1,26 @@
 PaginatedRecyclerView
 =====================
-Customizable pagination in Android RecyclerView.
+[![Download](https://api.bintray.com/packages/hendraanggrian/recyclerview-paginated/recyclerview-paginated/images/download.svg) ](https://bintray.com/hendraanggrian/recyclerview-paginated/recyclerview-paginated/_latestVersion)
+[![Build Status](https://travis-ci.org/hendraanggrian/recyclerview-paginated.svg)](https://travis-ci.org/hendraanggrian/recyclerview-paginated)
+[![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
 
 ![demo_list][demo_list] ![demo_grid][demo_grid]
+
+Customizable pagination in Android RecyclerView.
+
+Download
+--------
+```gradle
+repositories {
+    google()
+    jcenter()
+}
+
+dependencies {
+    compile "com.android.support:recyclerview-v7:27.1.1"
+    compile "com.hendraanggrian.recyclerview:recyclerview-paginated:$version"
+}
+```
 
 Usage
 -----
@@ -25,7 +43,7 @@ public class PostPagination extends PaginatedRecyclerView.Pagination {
     public boolean getPageStart(int page) {
         return 0;
     }
-    
+
     @Override
     public void onPaginate(int page) {
         if (loadItemSuccess) {
@@ -62,21 +80,6 @@ public class CustomLoadingAdapter extends LoadingAdapter {
 CustomLoadingAdapter loadingAdapter = new CustomLoadingAdapter();
 recyclerView.setLoadingAdapter(loadingAdapter);
 ```
-
-Download
---------
-```gradle
-repositories {
-    google()
-    jcenter()
-}
-
-dependencies {
-    compile 'com.android.support:recyclerview-v7:26.1.0'
-    compile 'com.hendraanggrian:recyclerview-paginated:0.6'
-}
-```
-
 
 License
 -------

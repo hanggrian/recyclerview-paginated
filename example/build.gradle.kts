@@ -1,20 +1,20 @@
 import org.gradle.kotlin.dsl.kotlin
 
 plugins {
-    id("com.android.application")
+    `android-application`
     kotlin("android")
-    id("kotlin-android-extensions")
+    kotlin("android.extensions")
 }
 
 android {
-    compileSdkVersion(targetSdk)
-    buildToolsVersion(buildTools)
+    compileSdkVersion(SDK_TARGET)
+    buildToolsVersion(BUILD_TOOLS)
     defaultConfig {
-        minSdkVersion(minSdk)
-        targetSdkVersion(targetSdk)
-        applicationId = "com.example.recyclerview.paginated"
+        minSdkVersion(SDK_MIN)
+        targetSdkVersion(SDK_TARGET)
+        applicationId = "com.example.${RELEASE_ARTIFACT.replace('-', '.')}"
         versionCode = 1
-        versionName = "1.0"
+        versionName = RELEASE_VERSION
     }
     sourceSets {
         getByName("main") {
@@ -37,26 +37,26 @@ android {
 }
 
 dependencies {
-    implementation(project(":recyclerview-paginated"))
-    implementation(kotlin("stdlib", kotlinVersion))
+    implementation(project(":$RELEASE_ARTIFACT"))
+    implementation(kotlin("stdlib", VERSION_KOTLIN))
 
-    implementation(support("appcompat-v7", supportVersion))
-    implementation(support("recyclerview-v7", supportVersion))
-    implementation(support("cardview-v7", supportVersion))
-    implementation(support("design", supportVersion))
+    implementation(support("appcompat-v7", VERSION_SUPPORT))
+    implementation(support("recyclerview-v7", VERSION_SUPPORT))
+    implementation(support("cardview-v7", VERSION_SUPPORT))
+    implementation(support("design", VERSION_SUPPORT))
 
-    implementation(square("retrofit2", "retrofit", retrofitVersion))
-    implementation(square("retrofit2", "adapter-rxjava2", retrofitVersion))
-    implementation(square("retrofit2", "converter-gson", retrofitVersion))
-    implementation(square("okhttp3", "okhttp", okhttpVersion))
-    implementation(square("okhttp3", "logging-interceptor", okhttpVersion))
+    implementation(square("retrofit2", "retrofit", VERSION_RETROFIT))
+    implementation(square("retrofit2", "adapter-rxjava2", VERSION_RETROFIT))
+    implementation(square("retrofit2", "converter-gson", VERSION_RETROFIT))
+    implementation(square("okhttp3", "okhttp", VERSION_OKHTTP))
+    implementation(square("okhttp3", "logging-interceptor", VERSION_OKHTTP))
 
-    implementation(rx("java", rxjavaVersion))
-    implementation(rx("kotlin", rxkotlinVersion))
-    implementation(rx("android", rxandroidVersion))
+    implementation(rx("java", VERSION_RXJAVA))
+    implementation(rx("kotlin", VERSION_RXKOTLIN))
+    implementation(rx("android", VERSION_RXANDROID))
 
-    implementation(hendraanggrian("kota-support-v4", kotaVersion))
-    implementation(hendraanggrian("kota-recyclerview-v7", kotaVersion))
+    implementation(hendraanggrian("kota-support-v4", VERSION_KOTA))
+    implementation(hendraanggrian("kota-recyclerview-v7", VERSION_KOTA))
 
-    implementation("de.hdodenhof:circleimageview:$circleimageviewVersion")
+    implementation("de.hdodenhof:circleimageview:$VERSION_CIRCLEIMAGEVIEW")
 }

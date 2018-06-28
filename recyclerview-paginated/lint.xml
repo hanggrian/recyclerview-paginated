@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<lint>
-    <!-- Not recognizing usage of paginated_loading_row.xml, possible Kotlin bug. -->
-    <issue id="UnusedResources" severity="ignore" />
-</lint>
