@@ -30,7 +30,7 @@ It has several attributes:
  * `loadingThreshold` - Set the offset from the end of the list at which the paginate more event needs to be triggered, default is 5.
 
 ```xml
-<com.hendraanggrian.widget.PaginatedRecyclerView
+<com.hendraanggrian.recyclerview.widget.PaginatedRecyclerView
     android:id="@+id/recyclerView"
     android:layout_width="match_parent"
     android:layout_height="match_parent" />

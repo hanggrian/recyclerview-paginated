@@ -1,4 +1,4 @@
-package com.example.recyclerview.paginated
+package com.hendraanggrian.recyclerview.paginated.demo
 
 data class Post(
         val userId: Int,

@@ -18,7 +18,7 @@
             app:titleTextColor="?colorAccent" />
     </android.support.design.widget.AppBarLayout>
 
-    <com.hendraanggrian.widget.PaginatedRecyclerView
+    <com.hendraanggrian.recyclerview.widget.PaginatedRecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

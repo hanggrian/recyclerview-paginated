@@ -1,7 +1,6 @@
 plugins {
     android("library")
     kotlin("android")
-    dokka
     `bintray-release`
 }
 
@@ -38,23 +37,15 @@ android {
 }
 
 dependencies {
-    api(kotlin("stdlib", VERSION_KOTLIN))
     implementation(androidx("recyclerview"))
 
     testImplementation(junit())
     testImplementation(truth())
     androidTestImplementation(truth())
-    androidTestImplementation(kotlin("stdlib"))
+    androidTestImplementation(kotlin("stdlib", VERSION_KOTLIN))
     androidTestImplementation(androidx("test.espresso", "espresso-core", VERSION_ESPRESSO))
     androidTestImplementation(androidx("test", "runner", VERSION_RUNNER))
     androidTestImplementation(androidx("test", "rules", VERSION_RULES))
-}
-
-tasks {
-    "dokka"(org.jetbrains.dokka.gradle.DokkaTask::class) {
-        outputDirectory = "$buildDir/docs"
-        doFirst { file(outputDirectory).deleteRecursively() }
-    }
 }
 
 publish {

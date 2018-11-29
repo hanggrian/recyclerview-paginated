@@ -5,7 +5,6 @@
       <module fileurl="file://$PROJECT_DIR$/buildSrc/buildSrc.iml" filepath="$PROJECT_DIR$/buildSrc/buildSrc.iml" />
       <module fileurl="file://$PROJECT_DIR$/recyclerview-paginated.iml" filepath="$PROJECT_DIR$/recyclerview-paginated.iml" />
       <module fileurl="file://$PROJECT_DIR$/recyclerview-paginated/recyclerview-paginated-recyclerview-paginated.iml" filepath="$PROJECT_DIR$/recyclerview-paginated/recyclerview-paginated-recyclerview-paginated.iml" />
-      <module fileurl="file://$PROJECT_DIR$/website/website.iml" filepath="$PROJECT_DIR$/website/website.iml" />
     </modules>
   </component>
 </project>

@@ -1,4 +1,4 @@
-package com.example.recyclerview.paginated
+package com.hendraanggrian.recyclerview.paginated.demo
 
 import io.reactivex.Single
 import okhttp3.OkHttpClient

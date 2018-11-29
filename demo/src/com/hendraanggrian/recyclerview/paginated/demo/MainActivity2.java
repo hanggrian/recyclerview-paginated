@@ -1,4 +1,4 @@
-package com.example.recyclerview.paginated;
+package com.hendraanggrian.recyclerview.paginated.demo
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -7,7 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
 
-import com.hendraanggrian.widget.PaginatedRecyclerView;
+import com.hendraanggrian.recyclerview.widget.PaginatedRecyclerView;
 
 @SuppressLint("Registered")
 public class MainActivity2 extends AppCompatActivity {

@@ -1,5 +1,5 @@
 plugins {
-    `android-application`
+    android("application")
     kotlin("android")
     kotlin("android.extensions")
 }
@@ -10,7 +10,7 @@ android {
     defaultConfig {
         minSdkVersion(SDK_MIN)
         targetSdkVersion(SDK_TARGET)
-        applicationId = "com.example.${RELEASE_ARTIFACT.replace('-', '.')}"
+        applicationId = "$RELEASE_GROUP.paginated.demo"
         versionCode = 1
         versionName = RELEASE_VERSION
     }

@@ -22,6 +22,4 @@ const val VERSION_OKHTTP = "3.8.1"
 
 internal const val VERSION_JUNIT = "4.12"
 internal const val VERSION_TRUTH = "0.42"
-internal const val VERSION_DOKKA = "0.9.17"
-internal const val VERSION_GIT_PUBLISH = "0.3.3"
 internal const val VERSION_BINTRAY_RELEASE = "0.9"
