@@ -1,6 +1,6 @@
 package com.hendraanggrian.recyclerview.paginated.internal
 
-import android.support.v7.widget.GridLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 
 internal class PaginationSpanSizeLookup(
     val originalLookup: GridLayoutManager.SpanSizeLookup,
