@@ -4,12 +4,8 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.Toast;
 
 import com.hendraanggrian.recyclerview.paginated.R;
 
@@ -26,8 +22,8 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 public class PaginatedRecyclerView extends RecyclerView {
 
-    private static final ThreadLocal<Map<String, Constructor<PlaceholderAdapter>>>
-        PLACEHOLDER_CONSTRUCTORS = new ThreadLocal<>();
+    private static final ThreadLocal<Map<String, Constructor<NonBindingAdapter>>>
+        ADAPTER_CONSTRUCTORS = new ThreadLocal<>();
 
     private final OnScrollListener onScrollListener = new OnScrollListener() {
         // Each time when list is scrolled check if end of the list is reached
@@ -79,8 +75,7 @@ public class PaginatedRecyclerView extends RecyclerView {
         }
 
         private void calculatePagination() {
-            Log.d("AAAAA", "calculatePagination()");
-            adapterWrapper.setPlaceholder(!pagination.isCompleted);
+            adapterWrapper.update(pagination.state != Pagination.State.COMPLETE, false);
             calculateEndOffset();
         }
     };
@@ -110,9 +105,15 @@ public class PaginatedRecyclerView extends RecyclerView {
         final TypedArray a = context.obtainStyledAttributes(
             attrs, R.styleable.PaginatedRecyclerView, defStyle, 0);
         if (a.hasValue(R.styleable.PaginatedRecyclerView_placeholderAdapter)) {
-            placeholderAdapter = parseAdapter(
+            placeholderAdapter = (PlaceholderAdapter) parseAdapter(
                 context,
                 a.getString(R.styleable.PaginatedRecyclerView_placeholderAdapter)
+            );
+        }
+        if (a.hasValue(R.styleable.PaginatedRecyclerView_errorAdapter)) {
+            errorAdapter = (ErrorAdapter) parseAdapter(
+                context,
+                a.getString(R.styleable.PaginatedRecyclerView_errorAdapter)
             );
         }
         threshold = a.getInteger(R.styleable.PaginatedRecyclerView_paginationThreshold, 5);
@@ -144,14 +145,13 @@ public class PaginatedRecyclerView extends RecyclerView {
             pagination.setOnCompleted(new Runnable() {
                 @Override
                 public void run() {
-                    adapterWrapper.setPlaceholder(false);
-                    adapterWrapper.setError(false);
+                    adapterWrapper.update(false, false);
                 }
             });
             pagination.setOnError(new Runnable() {
                 @Override
                 public void run() {
-                    adapterWrapper.setError(true);
+                    adapterWrapper.update(false, true);
                 }
             });
 
@@ -233,7 +233,9 @@ public class PaginatedRecyclerView extends RecyclerView {
     }
 
     public void setThreshold(int threshold) {
-        this.threshold = threshold;
+        if (threshold > 0) {
+            this.threshold = threshold;
+        }
     }
 
     private void forceResetPagination() {
@@ -266,7 +268,7 @@ public class PaginatedRecyclerView extends RecyclerView {
         if (totalItemCount - visibleItemCount <= firstVisibleItemPosition + threshold ||
             totalItemCount == 0) {
             // Call paginate more only if loading is not currently in progress and if there is more items to paginate
-            if (!pagination.isPlaceholder && !pagination.isError && !pagination.isCompleted) {
+            if (pagination.state == Pagination.State.LOADED) {
                 pagination.paginate();
             }
         }
@@ -276,7 +278,7 @@ public class PaginatedRecyclerView extends RecyclerView {
      * Stolen from {@code CoordinatorLayout.parseBehavior(Context, AttributeSet, String)}.
      */
     @SuppressWarnings("unchecked")
-    private static PlaceholderAdapter parseAdapter(Context context, String name) {
+    private static NonBindingAdapter parseAdapter(Context context, String name) {
         if (TextUtils.isEmpty(name)) {
             return null;
         }
@@ -292,21 +294,22 @@ public class PaginatedRecyclerView extends RecyclerView {
             fullName = "com.hendraanggrian.recyclerview.widget.PaginatedRecyclerview" + name;
         }
         try {
-            Map<String, Constructor<PlaceholderAdapter>> constructors =
-                PLACEHOLDER_CONSTRUCTORS.get();
+            Map<String, Constructor<NonBindingAdapter>> constructors =
+                ADAPTER_CONSTRUCTORS.get();
             if (constructors == null) {
                 constructors = new HashMap<>();
-                PLACEHOLDER_CONSTRUCTORS.set(constructors);
+                ADAPTER_CONSTRUCTORS.set(constructors);
             }
-            Constructor<PlaceholderAdapter> c = constructors.get(fullName);
+            Constructor<NonBindingAdapter> c = constructors.get(fullName);
             if (c == null) {
-                final Class<PlaceholderAdapter> clazz = (Class<PlaceholderAdapter>) Class
+                final Class<NonBindingAdapter> clazz = (Class<NonBindingAdapter>) Class
                     .forName(fullName, true, context.getClassLoader());
                 c = clazz.getConstructor();
                 constructors.put(fullName, c);
             }
             return c.newInstance();
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(
                 "Could not inflate placeholder adapter subclass " + fullName, e);
         }
@@ -318,9 +321,7 @@ public class PaginatedRecyclerView extends RecyclerView {
      */
     public static abstract class Pagination {
         private int page = getPageStart();
-        private boolean isPlaceholder = true;
-        private boolean isError = false;
-        private boolean isCompleted = false;
+        private State state;
         private Runnable onCompleted;
         private Runnable onError;
 
@@ -337,8 +338,7 @@ public class PaginatedRecyclerView extends RecyclerView {
         public abstract void onPaginate(int page);
 
         void paginate() {
-            isPlaceholder = true;
-            isError = false;
+            state = State.LOADING;
             onPaginate(page++);
         }
 
@@ -357,22 +357,9 @@ public class PaginatedRecyclerView extends RecyclerView {
             return page;
         }
 
-        /**
-         * Indicates whether or not this pagination is currently loading.
-         */
-        public final boolean isPlaceholder() {
-            return isPlaceholder;
-        }
-
-        public final boolean isError() {
-            return isError;
-        }
-
-        /**
-         * Indicated whether or not this pagination has successfully loaded all items.
-         */
-        public final boolean isCompleted() {
-            return isCompleted;
+        @NonNull
+        public final State getState() {
+            return state;
         }
 
         /**
@@ -380,11 +367,12 @@ public class PaginatedRecyclerView extends RecyclerView {
          * therefore loading row should be hidden.
          */
         public final void notifyPageLoaded() {
-            isPlaceholder = false;
+            state = State.LOADED;
         }
 
         public final void notifyPageError() {
-            isError = true;
+            state = State.ERROR;
+            page--;
             onError.run();
         }
 
@@ -393,14 +381,17 @@ public class PaginatedRecyclerView extends RecyclerView {
          * should not attempt to load any more.
          */
         public final void notifyPaginationCompleted() {
-            isCompleted = true;
+            state = State.COMPLETE;
             onCompleted.run();
         }
 
         public final void notifyPaginationRestart() {
-            isCompleted = false;
             page = getPageStart();
             paginate();
+        }
+
+        public enum State {
+            LOADING, LOADED, ERROR, COMPLETE
         }
     }
 
@@ -415,6 +406,13 @@ public class PaginatedRecyclerView extends RecyclerView {
         public int getItemCount() {
             return 0;
         }
+
+        /**
+         * By default, there is no binding for placeholder row, override this method otherwise.
+         */
+        @Override
+        public void onBindViewHolder(@NonNull VH holder, int position) {
+        }
     }
 
     /**
@@ -425,61 +423,31 @@ public class PaginatedRecyclerView extends RecyclerView {
     public static abstract class PlaceholderAdapter<VH extends ViewHolder> extends NonBindingAdapter<VH> {
 
         /**
-         * By default, there is no binding for placeholder row, override this method otherwise.
-         */
-        @Override
-        public void onBindViewHolder(@NonNull VH holder, int position) {
-        }
-
-        /**
          * Default placeholder adapter, which is just an indeterminate progress bar.
          */
-        public static final PlaceholderAdapter<ViewHolder> DEFAULT =
-            new PlaceholderAdapter<ViewHolder>() {
-                @NonNull
-                @Override
-                public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-                    return new ViewHolder(LayoutInflater
-                        .from(parent.getContext())
-                        .inflate(R.layout.recyclerview_paginated_placeholder, parent, false)) {
-                    };
-                }
-            };
+        public static final PlaceholderAdapter DEFAULT = new PlaceholderAdapter<ViewHolder>() {
+            @NonNull
+            @Override
+            public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                return new ViewHolder(LayoutInflater
+                    .from(parent.getContext())
+                    .inflate(R.layout.recyclerview_paginated_placeholder, parent, false)) {
+                };
+            }
+        };
     }
 
     public static abstract class ErrorAdapter<VH extends ViewHolder> extends NonBindingAdapter<VH> {
 
-        @Override
-        public void onBindViewHolder(@NonNull final VH holder, int position) {
-            if (!(holder instanceof ErrorViewHolder)) {
-                throw new RuntimeException("ErrorAdapter must pass ErrorViewHolder generic");
+        public static final ErrorAdapter DEFAULT = new ErrorAdapter<ViewHolder>() {
+            @NonNull
+            @Override
+            public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                return new ViewHolder(LayoutInflater
+                    .from(parent.getContext())
+                    .inflate(R.layout.recyclerview_paginated_error, parent, false)){
+                };
             }
-            ((ErrorViewHolder) holder).retryButton.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(((ErrorViewHolder) holder).retryButton.getContext(), "Clicked", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-
-        public static final ErrorAdapter<ViewHolder> DEFAULT =
-            new ErrorAdapter<ViewHolder>() {
-                @NonNull
-                @Override
-                public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-                    return new ErrorViewHolder(LayoutInflater
-                        .from(parent.getContext())
-                        .inflate(R.layout.recyclerview_paginated_error, parent, false));
-                }
-            };
-    }
-
-    public static class ErrorViewHolder extends ViewHolder {
-        public final Button retryButton;
-
-        public ErrorViewHolder(@NonNull View itemView) {
-            super(itemView);
-            retryButton = itemView.findViewById(android.R.id.button1);
-        }
+        };
     }
 }

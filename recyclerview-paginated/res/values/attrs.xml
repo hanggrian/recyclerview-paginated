@@ -9,5 +9,8 @@
 
         <!-- Class name of placeholder adapter, instance of the class will be created reflectively. -->
         <attr name="placeholderAdapter" format="string" />
+
+        <!-- Class name of error adapter, instance of the class will be created reflectively. -->
+        <attr name="errorAdapter" format="string" />
     </declare-styleable>
 </resources>

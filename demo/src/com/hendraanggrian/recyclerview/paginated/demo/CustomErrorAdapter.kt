@@ -6,11 +6,11 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.hendraanggrian.recyclerview.widget.PaginatedRecyclerView
 
-class CustomPlaceholderAdapter :
-    PaginatedRecyclerView.PlaceholderAdapter<CustomPlaceholderAdapter.ViewHolder>() {
+class CustomErrorAdapter :
+    PaginatedRecyclerView.ErrorAdapter<CustomErrorAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder = ViewHolder(
-        LayoutInflater.from(parent.context).inflate(R.layout.custom_placeholder, parent, false)
+        LayoutInflater.from(parent.context).inflate(R.layout.custom_error, parent, false)
     )
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)

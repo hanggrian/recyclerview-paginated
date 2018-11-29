@@ -9,7 +9,7 @@ PaginatedRecyclerView
 
 Customizable pagination in Android RecyclerView. Some of the features are:
  * Placeholder view when page is being fetched.
- * Error view with a retry button when page has failed to load.
+ * Error view when page has failed to load.
  * Works with `LinearLayoutManager` and `StaggeredGridLayoutManager`.
 
 Download
@@ -29,8 +29,9 @@ Usage
 -----
 #### Use `PaginatedRecyclerView`
 It has several attributes:
- * `paginationThreshold` - Set the offset from the end of the list at which the paginate more event needs to be triggered, default is 5.
- * `placeholderAdapter` - Class name of customized placeholder adapter, may be ignored.
+ * `paginationThreshold` - set the offset from the end of the list at which the paginate more event needs to be triggered, default is 5.
+ * `placeholderAdapter` - class name of customized placeholder adapter, may be ignored.
+ * `errorAdapter` - class name of customized error adapter, may be ignored.
 
 ```xml
 <com.hendraanggrian.recyclerview.widget.PaginatedRecyclerView
