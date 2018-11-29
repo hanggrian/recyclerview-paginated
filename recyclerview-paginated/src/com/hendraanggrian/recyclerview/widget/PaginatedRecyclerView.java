@@ -247,7 +247,7 @@ public class PaginatedRecyclerView extends RecyclerView {
         /**
          * Where the logic of data population should be.
          */
-        abstract void onPaginate(int page);
+        public abstract void onPaginate(int page);
 
         void paginate() {
             notifyLoadingStarted();

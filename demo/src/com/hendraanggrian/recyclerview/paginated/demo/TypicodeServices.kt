@@ -14,12 +14,12 @@ object TypicodeServices {
     private const val API = "https://jsonplaceholder.typicode.com/"
 
     private val loggingInterceptor = HttpLoggingInterceptor()
-            .setLevel(HttpLoggingInterceptor.Level.BODY)
+        .setLevel(HttpLoggingInterceptor.Level.BODY)
     private val okhttp = OkHttpClient.Builder()
     private val retrofit = Retrofit.Builder()
-            .baseUrl(API)
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .addConverterFactory(GsonConverterFactory.create())
+        .baseUrl(API)
+        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+        .addConverterFactory(GsonConverterFactory.create())
     private var cache = retrofit.build()
 
     fun create(): Service {
