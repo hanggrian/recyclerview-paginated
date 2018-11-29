@@ -1,11 +1,8 @@
 package com.hendraanggrian.recyclerview.paginated.demo
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
@@ -38,14 +35,14 @@ class MainActivity : AppCompatActivity() {
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({ post ->
-                        notifyLoadingCompleted()
+                        notifyPageLoaded()
                         if (list.add(post)) {
                             adapter!!.notifyItemInserted(list.size - 1)
                         }
                     }) {
-                        notifyPaginationFinished()
+                        notifyPaginationCompleted()
                     })
-                if (page == 50) notifyPaginationFinished()
+                if (page == 50) notifyPaginationCompleted()
             }
         }
     }
@@ -83,7 +80,7 @@ class MainActivity : AppCompatActivity() {
 
         disposables.forEach { it.dispose() }
         disposables.clear()
-        recyclerView.pagination!!.notifyPaginationReset()
+        recyclerView.pagination!!.notifyPaginationRestart()
         return super.onOptionsItemSelected(item)
     }
 }

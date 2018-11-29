@@ -193,9 +193,9 @@ public class PaginatedRecyclerView extends RecyclerView {
         if (placeholderAdapter != adapter) {
             placeholderAdapter = adapter;
             if (pagination != null) {
-                final Pagination temp = pagination;
-                pagination = null;
-                pagination = temp;
+                final Pagination copy = pagination;
+                setPagination(null);
+                setPagination(copy);
             }
         }
     }
@@ -303,7 +303,7 @@ public class PaginatedRecyclerView extends RecyclerView {
         public abstract void onPaginate(int page);
 
         void paginate() {
-            notifyLoadingStarted();
+            isLoading = true;
             onPaginate(page++);
         }
 
@@ -314,36 +314,29 @@ public class PaginatedRecyclerView extends RecyclerView {
         /**
          * Returns current page of this pagination.
          */
-        public int getPage() {
+        public final int getPage() {
             return page;
         }
 
         /**
          * Indicates whether or not this pagination is currently loading.
          */
-        public boolean isLoading() {
+        public final boolean isLoading() {
             return isLoading;
         }
 
         /**
          * Indicated whether or not this pagination has successfully loaded all items.
          */
-        public boolean isFinished() {
+        public final boolean isFinished() {
             return isFinished;
-        }
-
-        /**
-         * Notify this pagination that a loading has started and should display a loading row.
-         */
-        public void notifyLoadingStarted() {
-            isLoading = true;
         }
 
         /**
          * Notify this pagination that loading has completed,
          * therefore loading row should be hidden.
          */
-        public void notifyLoadingCompleted() {
+        public final void notifyPageLoaded() {
             isLoading = false;
         }
 
@@ -351,12 +344,12 @@ public class PaginatedRecyclerView extends RecyclerView {
          * Notify this pagination that it has successfully loaded all items and
          * should not attempt to load any more.
          */
-        public void notifyPaginationFinished() {
+        public final void notifyPaginationCompleted() {
             isFinished = true;
             onFinishLoading.run();
         }
 
-        public void notifyPaginationReset() {
+        public final void notifyPaginationRestart() {
             isFinished = false;
             page = getPageStart();
             paginate();
