@@ -31,7 +31,7 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
         return actualAdapter;
     }
 
-    void update(boolean isPlaceholder, boolean isError) {
+    void updateState(boolean isPlaceholder, boolean isError) {
         this.isPlaceholder = isPlaceholder;
         this.isError = isError;
         notifyDataSetChanged();
