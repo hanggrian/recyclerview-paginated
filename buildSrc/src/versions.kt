@@ -12,7 +12,6 @@ const val VERSION_ESPRESSO = "3.1.0"
 const val VERSION_RUNNER = "1.1.0"
 const val VERSION_RULES = "1.1.0"
 
-const val VERSION_KOTA = "0.19"
 const val VERSION_CIRCLEIMAGEVIEW = "2.1.0"
 const val VERSION_RXJAVA = "2.1.6"
 const val VERSION_RXKOTLIN = "2.1.0"
