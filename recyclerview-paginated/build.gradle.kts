@@ -1,13 +1,6 @@
-import org.gradle.api.internal.file.pattern.PatternMatcherFactory.compile
-import org.gradle.kotlin.dsl.kotlin
-import org.gradle.language.base.plugins.LifecycleBasePlugin.*
-import org.jetbrains.dokka.gradle.DokkaTask
-
 plugins {
-    `android-library`
+    android("library")
     kotlin("android")
-    dokka
-    `git-publish`
     `bintray-release`
 }
 
@@ -17,8 +10,8 @@ android {
     defaultConfig {
         minSdkVersion(SDK_MIN)
         targetSdkVersion(SDK_TARGET)
-        versionName = VERSION_SUPPORT
-        testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
+        versionName = VERSION_ANDROIDX
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     sourceSets {
         getByName("main") {
@@ -35,62 +28,31 @@ android {
             resources.srcDir("tests/src")
         }
     }
+    lintOptions {
+        isCheckTestSources = true
+    }
     libraryVariants.all {
         generateBuildConfig?.enabled = false
     }
 }
 
-val ktlint by configurations.creating
-
 dependencies {
-    api(kotlin("stdlib", VERSION_KOTLIN))
-    implementation(support("recyclerview-v7", VERSION_SUPPORT))
+    implementation(androidx("recyclerview"))
 
     testImplementation(junit())
     testImplementation(truth())
     androidTestImplementation(truth())
-    androidTestImplementation(support("espresso-core", VERSION_ESPRESSO, "test", "espresso"))
-    androidTestImplementation(support("runner", VERSION_RUNNER, "test"))
-    androidTestImplementation(support("rules", VERSION_RULES, "test"))
-
-    ktlint(ktlint())
-}
-
-tasks {
-    "ktlint"(JavaExec::class) {
-        get("check").dependsOn(this)
-        group = VERIFICATION_GROUP
-        inputs.dir("src")
-        outputs.dir("src")
-        description = "Check Kotlin code style."
-        classpath = ktlint
-        main = "com.github.shyiko.ktlint.Main"
-        args("--android", "src/**/*.kt")
-    }
-    "ktlintFormat"(JavaExec::class) {
-        group = "formatting"
-        inputs.dir("src")
-        outputs.dir("src")
-        description = "Fix Kotlin code style deviations."
-        classpath = ktlint
-        main = "com.github.shyiko.ktlint.Main"
-        args("--android", "-F", "src/**/*.kt")
-    }
-
-    val dokka by getting(DokkaTask::class) {
-        outputDirectory = "$buildDir/docs"
-        doFirst { file(outputDirectory).deleteRecursively() }
-    }
-    gitPublish {
-        repoUri = RELEASE_WEBSITE
-        branch = "gh-pages"
-        contents.from(dokka.outputDirectory)
-    }
-    get("gitPublishCopy").dependsOn(dokka)
+    androidTestImplementation(kotlin("stdlib", VERSION_KOTLIN))
+    androidTestImplementation(androidx("test.espresso", "espresso-core", VERSION_ESPRESSO))
+    androidTestImplementation(androidx("test", "runner", VERSION_RUNNER))
+    androidTestImplementation(androidx("test", "rules", VERSION_RULES))
 }
 
 publish {
-    repoName = RELEASE_ARTIFACT
+    bintrayUser = BINTRAY_USER
+    bintrayKey = BINTRAY_KEY
+    dryRun = false
+    repoName = RELEASE_REPO
 
     userOrg = RELEASE_USER
     groupId = RELEASE_GROUP

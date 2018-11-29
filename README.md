@@ -1,8 +1,9 @@
 PaginatedRecyclerView
 =====================
-[![Download](https://api.bintray.com/packages/hendraanggrian/recyclerview-paginated/recyclerview-paginated/images/download.svg) ](https://bintray.com/hendraanggrian/recyclerview-paginated/recyclerview-paginated/_latestVersion)
-[![Build Status](https://travis-ci.org/hendraanggrian/recyclerview-paginated.svg)](https://travis-ci.org/hendraanggrian/recyclerview-paginated)
-[![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
+[![bintray](https://img.shields.io/badge/bintray-recyclerview-brightgreen.svg)](https://bintray.com/hendraanggrian/recyclerview)
+[![download](https://api.bintray.com/packages/hendraanggrian/recyclerview/recyclerview-paginated/images/download.svg)](https://bintray.com/hendraanggrian/recyclerview/recyclerview-paginated/_latestVersion)
+[![build](https://travis-ci.com/hendraanggrian/recyclerview-paginated.svg)](https://travis-ci.com/hendraanggrian/recyclerview-paginated)
+[![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 ![demo_list][demo_list] ![demo_grid][demo_grid]
 
@@ -17,8 +18,7 @@ repositories {
 }
 
 dependencies {
-    compile "com.android.support:recyclerview-v7:27.1.1"
-    compile "com.hendraanggrian.recyclerview:recyclerview-paginated:$version"
+    implementation "com.hendraanggrian.recyclerview:recyclerview-paginated:$version"
 }
 ```
 
@@ -26,11 +26,11 @@ Usage
 -----
 #### Use `PaginatedRecyclerView`
 It has several attributes:
- * `loadingEnabled` - Will enable loading row while paginating, default is true.
- * `loadingThreshold` - Set the offset from the end of the list at which the paginate more event needs to be triggered, default is 5.
+ * `paginationThreshold` - Set the offset from the end of the list at which the paginate more event needs to be triggered, default is 5.
+ * `placeholderAdapter` - Class name of customized placeholder adapter, may be ignored.
 
 ```xml
-<com.hendraanggrian.widget.PaginatedRecyclerView
+<com.hendraanggrian.recyclerview.widget.PaginatedRecyclerView
     android:id="@+id/recyclerView"
     android:layout_width="match_parent"
     android:layout_height="match_parent" />
@@ -77,8 +77,8 @@ public class CustomLoadingAdapter extends LoadingAdapter {
     }
 }
 
-CustomLoadingAdapter loadingAdapter = new CustomLoadingAdapter();
-recyclerView.setLoadingAdapter(loadingAdapter);
+CustomLoadingAdapter placeholderAdapter = new CustomLoadingAdapter();
+recyclerView.setLoadingAdapter(placeholderAdapter);
 ```
 
 License

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <public name="loadingEnabled" type="attr" />
-    <public name="loadingThreshold" type="attr" />
+    <public name="paginationThreshold" type="attr" />
+    <public name="placeholderAdapter" type="attr" />
 </resources>
