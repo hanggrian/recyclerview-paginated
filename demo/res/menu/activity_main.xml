@@ -4,15 +4,20 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <item
-        android:id="@+id/itemToggle"
+        android:id="@+id/item_toggle"
         android:icon="@drawable/ic_view_list_black_24dp"
         android:title="Toggle layout manager"
         app:showAsAction="always"
         tools:ignore="AlwaysShowAction" />
 
     <item
-        android:id="@+id/itemCustom"
+        android:id="@+id/item_restart"
+        android:title="Restart"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/item_custom_adapters"
         android:checkable="true"
-        android:title="Custom loading adapter"
+        android:title="Custom adapters"
         app:showAsAction="never" />
 </menu>

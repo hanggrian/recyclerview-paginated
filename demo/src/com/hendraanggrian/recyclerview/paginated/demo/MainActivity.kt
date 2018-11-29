@@ -40,9 +40,11 @@ class MainActivity : AppCompatActivity() {
                             adapter!!.notifyItemInserted(list.size - 1)
                         }
                     }) {
-                        notifyPaginationCompleted()
+                        notifyPageError()
                     })
-                if (page == 50) notifyPaginationCompleted()
+                if (page == 50) {
+                    notifyPaginationCompleted()
+                }
             }
         }
     }
@@ -54,7 +56,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.itemToggle -> {
+            R.id.item_toggle -> {
                 toggle = !toggle
                 if (toggle) {
                     item.icon =
@@ -65,11 +67,16 @@ class MainActivity : AppCompatActivity() {
                     recyclerView.layoutManager = LinearLayoutManager(this)
                 }
             }
-            R.id.itemCustom -> {
+            R.id.item_restart -> recyclerView.pagination!!.notifyPaginationRestart()
+            R.id.item_custom_adapters -> {
                 item.isChecked = !item.isChecked
                 recyclerView.placeholderAdapter = when {
                     item.isChecked -> CustomPlaceholderAdapter()
                     else -> PaginatedRecyclerView.PlaceholderAdapter.DEFAULT
+                }
+                recyclerView.errorAdapter = when {
+                    item.isChecked -> CustomErrorAdapter()
+                    else -> PaginatedRecyclerView.ErrorAdapter.DEFAULT
                 }
             }
         }
@@ -80,7 +87,9 @@ class MainActivity : AppCompatActivity() {
 
         disposables.forEach { it.dispose() }
         disposables.clear()
+
         recyclerView.pagination!!.notifyPaginationRestart()
+
         return super.onOptionsItemSelected(item)
     }
 }

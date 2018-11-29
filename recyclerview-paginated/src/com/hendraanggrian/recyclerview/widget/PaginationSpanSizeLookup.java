@@ -24,7 +24,8 @@ final class PaginationSpanSizeLookup extends GridLayoutManager.SpanSizeLookup {
 
     @Override
     public int getSpanSize(int position) {
-        return paginationAdapterWrapper.isLoadingRow(position)
+        return paginationAdapterWrapper.isPlaceholderRow(position) ||
+            paginationAdapterWrapper.isErrorRow(position)
             ? loadingLookup.getSpanSize(position)
             : originalLookup.getSpanSize(position);
     }

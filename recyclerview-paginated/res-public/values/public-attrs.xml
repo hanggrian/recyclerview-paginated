@@ -2,4 +2,5 @@
 <resources>
     <public name="paginationThreshold" type="attr" />
     <public name="placeholderAdapter" type="attr" />
+    <public name="errorAdapter" type="attr" />
 </resources>
