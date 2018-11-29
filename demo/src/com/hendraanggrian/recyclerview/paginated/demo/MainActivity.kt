@@ -70,9 +70,9 @@ class MainActivity : AppCompatActivity() {
             }
             R.id.itemCustom -> {
                 item.isChecked = !item.isChecked
-                recyclerView.loadingAdapter = when {
-                    item.isChecked -> CustomLoadingAdapter()
-                    else -> PaginatedRecyclerView.LoadingAdapter.DEFAULT
+                recyclerView.placeholderAdapter = when {
+                    item.isChecked -> CustomPlaceholderAdapter()
+                    else -> PaginatedRecyclerView.PlaceholderAdapter.DEFAULT
                 }
             }
         }
@@ -86,16 +86,4 @@ class MainActivity : AppCompatActivity() {
         recyclerView.pagination!!.notifyPaginationReset()
         return super.onOptionsItemSelected(item)
     }
-
-    class CustomLoadingAdapter : PaginatedRecyclerView.LoadingAdapter<ViewHolder>() {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder = ViewHolder(
-            LayoutInflater.from(parent.context).inflate(
-                R.layout.custom_loading_row,
-                parent,
-                false
-            )
-        )
-    }
-
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 }

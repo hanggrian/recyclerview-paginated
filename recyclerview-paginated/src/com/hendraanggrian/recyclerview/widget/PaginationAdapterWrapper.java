@@ -9,19 +9,19 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
 
     private static int TYPE_LOADING = Integer.MAX_VALUE - 50; // magic
 
-    private final RecyclerView.Adapter<RecyclerView.ViewHolder> actualAdapter;
-    private final PaginatedRecyclerView.LoadingAdapter<RecyclerView.ViewHolder> loadingAdapter;
+    private final RecyclerView.Adapter actualAdapter;
+    private final PaginatedRecyclerView.PlaceholderAdapter placeholderAdapter;
     private boolean isDisplaying = true;
 
     PaginationAdapterWrapper(
-        RecyclerView.Adapter<RecyclerView.ViewHolder> actualAdapter,
-        PaginatedRecyclerView.LoadingAdapter<RecyclerView.ViewHolder> loadingAdapter
+        RecyclerView.Adapter actualAdapter,
+        PaginatedRecyclerView.PlaceholderAdapter placeholderAdapter
     ) {
         this.actualAdapter = actualAdapter;
-        this.loadingAdapter = loadingAdapter;
+        this.placeholderAdapter = placeholderAdapter;
     }
 
-    RecyclerView.Adapter<RecyclerView.ViewHolder> getActualAdapter() {
+    RecyclerView.Adapter getActualAdapter() {
         return actualAdapter;
     }
 
@@ -36,14 +36,15 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         return viewType == TYPE_LOADING
-            ? loadingAdapter.onCreateViewHolder(parent, viewType)
+            ? placeholderAdapter.onCreateViewHolder(parent, viewType)
             : actualAdapter.onCreateViewHolder(parent, viewType);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if (isLoadingRow(position)) {
-            loadingAdapter.onBindViewHolder(holder, position);
+            placeholderAdapter.onBindViewHolder(holder, position);
         } else {
             actualAdapter.onBindViewHolder(holder, position);
         }

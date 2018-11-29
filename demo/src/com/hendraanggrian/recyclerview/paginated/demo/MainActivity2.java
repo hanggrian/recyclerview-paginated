@@ -18,7 +18,7 @@ public class MainActivity2 extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         PaginatedRecyclerView recyclerView = new PaginatedRecyclerView(this);
         recyclerView
-            .setLoadingAdapter(new PaginatedRecyclerView.LoadingAdapter<RecyclerView.ViewHolder>() {
+            .setPlaceholderAdapter(new PaginatedRecyclerView.PlaceholderAdapter<RecyclerView.ViewHolder>() {
                 @Override
                 public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
                     return null;

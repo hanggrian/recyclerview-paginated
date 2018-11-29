@@ -2,11 +2,16 @@ package com.hendraanggrian.recyclerview.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import com.hendraanggrian.recyclerview.paginated.R;
+
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,6 +21,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 public class PaginatedRecyclerView extends RecyclerView {
+
+    private static final ThreadLocal<Map<String, Constructor<PlaceholderAdapter>>>
+        PLACEHOLDER_CONSTRUCTORS = new ThreadLocal<>();
 
     private final OnScrollListener onScrollListener = new OnScrollListener() {
         // Each time when list is scrolled check if end of the list is reached
@@ -74,10 +82,10 @@ public class PaginatedRecyclerView extends RecyclerView {
 
     private Pagination pagination;
     private PaginationAdapterWrapper adapterWrapper;
-    private PaginationSpanSizeLookup paginationLookup;
+    private PaginationSpanSizeLookup spanSizeLookup;
 
-    private LoadingAdapter loadingAdapter;
-    private int loadingThreshold;
+    private PlaceholderAdapter placeholderAdapter;
+    private int threshold;
 
     public PaginatedRecyclerView(@NonNull Context context) {
         this(context, null);
@@ -93,13 +101,15 @@ public class PaginatedRecyclerView extends RecyclerView {
         int defStyle
     ) {
         super(context, attrs, defStyle);
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.PaginatedRecyclerView,
-            defStyle, 0
-        );
-        if (a.getBoolean(R.styleable.PaginatedRecyclerView_loadingEnabled, true)) {
-            loadingAdapter = LoadingAdapter.DEFAULT;
+        final TypedArray a = context.obtainStyledAttributes(
+            attrs, R.styleable.PaginatedRecyclerView, defStyle, 0);
+        if (a.hasValue(R.styleable.PaginatedRecyclerView_placeholderAdapter)) {
+            placeholderAdapter = parsePlaceholderAdapter(
+                context,
+                a.getString(R.styleable.PaginatedRecyclerView_placeholderAdapter)
+            );
         }
-        loadingThreshold = a.getInteger(R.styleable.PaginatedRecyclerView_loadingThreshold, 5);
+        threshold = a.getInteger(R.styleable.PaginatedRecyclerView_paginationThreshold, 5);
         a.recycle();
     }
 
@@ -109,82 +119,84 @@ public class PaginatedRecyclerView extends RecyclerView {
     }
 
     public void setPagination(@Nullable Pagination pagination) {
-        final LayoutManager manager = getLayoutManager();
-        if (manager == null) {
+        if (getLayoutManager() == null) {
             throw new IllegalStateException("LayoutManager must be initialized before Pagination!");
         }
-        final Adapter adapter = getAdapter();
-        if (adapter == null) {
+        if (getAdapter() == null) {
             throw new IllegalStateException("Adapter must be initialized before Pagination!");
         }
         if (pagination != null) {
             this.pagination = pagination;
             pagination.paginate();
             addOnScrollListener(onScrollListener);
-            if (loadingAdapter != null) {
-                adapter.registerAdapterDataObserver(observer);
-                adapterWrapper = new PaginationAdapterWrapper(adapter, loadingAdapter);
-                setAdapter(adapterWrapper);
 
-                pagination.setOnFinishLoading(new Runnable() {
-                    @Override
-                    public void run() {
-                        adapterWrapper.setDisplaying(false);
-                    }
-                });
+            getAdapter().registerAdapterDataObserver(observer);
+            adapterWrapper = new PaginationAdapterWrapper(getAdapter(), getPlaceholderAdapter());
+            setAdapter(adapterWrapper);
 
-                // For GridLayoutManager use separate/customisable span lookup for loading row
-                if (manager instanceof GridLayoutManager) {
-                    paginationLookup = new PaginationSpanSizeLookup(
-                        ((GridLayoutManager) manager).getSpanSizeLookup(),
-                        new GridLayoutManager.SpanSizeLookup() {
-                            @Override
-                            public int getSpanSize(int position) {
-                                return ((GridLayoutManager) manager).getSpanCount();
-                            }
-                        },
-                        adapterWrapper
-                    );
-                    ((GridLayoutManager) manager).setSpanSizeLookup(paginationLookup);
+            pagination.setOnFinishLoading(new Runnable() {
+                @Override
+                public void run() {
+                    adapterWrapper.setDisplaying(false);
                 }
+            });
+
+            // For GridLayoutManager use separate/customisable span lookup for loading row
+            if (getLayoutManager() instanceof GridLayoutManager) {
+                spanSizeLookup = new PaginationSpanSizeLookup(
+                    ((GridLayoutManager) getLayoutManager()).getSpanSizeLookup(),
+                    new GridLayoutManager.SpanSizeLookup() {
+                        @Override
+                        public int getSpanSize(int position) {
+                            return ((GridLayoutManager) getLayoutManager()).getSpanCount();
+                        }
+                    },
+                    adapterWrapper
+                );
+                ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(spanSizeLookup);
             }
+
             // Trigger initial check since adapter might not have any items initially so no scrolling events upon
             // RecyclerView (that triggers check) will occur
             calculateEndOffset();
         } else {
             removeOnScrollListener(onScrollListener);
-            if (adapter instanceof PaginationAdapterWrapper) {
+            if (getAdapter() instanceof PaginationAdapterWrapper) {
                 final PaginationAdapterWrapper paginatedAdapter =
-                    (PaginationAdapterWrapper) adapter;
+                    (PaginationAdapterWrapper) getAdapter();
                 final Adapter actualAdapter = paginatedAdapter.getActualAdapter();
                 actualAdapter.unregisterAdapterDataObserver(observer);
                 setAdapter(actualAdapter);
             }
-            if (manager instanceof GridLayoutManager && paginationLookup != null) {
-                ((GridLayoutManager) manager)
-                    .setSpanSizeLookup(paginationLookup.getOriginalLookup());
+            if (getLayoutManager() instanceof GridLayoutManager && spanSizeLookup != null) {
+                ((GridLayoutManager) getLayoutManager())
+                    .setSpanSizeLookup(spanSizeLookup.getOriginalLookup());
             }
             this.pagination = null;
             adapterWrapper = null;
-            paginationLookup = null;
+            spanSizeLookup = null;
         }
     }
 
     /**
      * Mimicking {@link #setAdapter} and {@link #getAdapter()}, it sets adapter for loading row.
-     * {@link LoadingAdapter#DEFAULT} is used by default.
+     * {@link PlaceholderAdapter#DEFAULT} is used by default.
      */
-    @Nullable
-    public LoadingAdapter getLoadingAdapter() {
-        return loadingAdapter;
+    @NonNull
+    public PlaceholderAdapter getPlaceholderAdapter() {
+        return placeholderAdapter != null
+            ? placeholderAdapter
+            : PlaceholderAdapter.DEFAULT;
     }
 
-    public void setLoadingAdapter(@Nullable LoadingAdapter adapter) {
-        loadingAdapter = adapter;
-        if (pagination != null) {
-            final Pagination temp = pagination;
-            pagination = null;
-            pagination = temp;
+    public void setPlaceholderAdapter(@NonNull PlaceholderAdapter adapter) {
+        if (placeholderAdapter != adapter) {
+            placeholderAdapter = adapter;
+            if (pagination != null) {
+                final Pagination temp = pagination;
+                pagination = null;
+                pagination = temp;
+            }
         }
     }
 
@@ -192,20 +204,20 @@ public class PaginatedRecyclerView extends RecyclerView {
      * Tells scrolling listener to start to load next page when you have
      * scrolled to n items from last item.
      */
-    public int getLoadingThreshold() {
-        return loadingThreshold;
+    public int getThreshold() {
+        return threshold;
     }
 
-    public void setLoadingThreshold(int threshold) {
-        loadingThreshold = threshold;
+    public void setThreshold(int threshold) {
+        this.threshold = threshold;
     }
 
     private void calculateEndOffset() {
         final int firstVisibleItemPosition;
         final LayoutManager manager = getLayoutManager();
         if (manager instanceof LinearLayoutManager) {
-            firstVisibleItemPosition =
-                ((LinearLayoutManager) manager).findFirstVisibleItemPosition();
+            firstVisibleItemPosition = ((LinearLayoutManager) manager)
+                .findFirstVisibleItemPosition();
         } else if (manager instanceof StaggeredGridLayoutManager) {
             // https://code.google.com/p/android/issues/detail?id=181461
             firstVisibleItemPosition = manager.getChildCount() > 0
@@ -219,11 +231,52 @@ public class PaginatedRecyclerView extends RecyclerView {
         // Check if end of the list is reached (counting threshold) or if there is no items at all
         final int visibleItemCount = getChildCount();
         final int totalItemCount = getLayoutManager().getItemCount();
-        if (totalItemCount - visibleItemCount <= firstVisibleItemPosition + loadingThreshold || totalItemCount == 0) {
+        if (totalItemCount - visibleItemCount <= firstVisibleItemPosition + threshold ||
+            totalItemCount == 0) {
             // Call paginate more only if loading is not currently in progress and if there is more items to paginate
             if (!pagination.isLoading && !pagination.isFinished) {
                 pagination.paginate();
             }
+        }
+    }
+
+    /**
+     * Stolen from {@code CoordinatorLayout.parseBehavior(Context, AttributeSet, String)}.
+     */
+    @SuppressWarnings("unchecked")
+    private static PlaceholderAdapter parsePlaceholderAdapter(Context context, String name) {
+        if (TextUtils.isEmpty(name)) {
+            return null;
+        }
+        final String fullName;
+        if (name.startsWith(".")) {
+            // Relative to the app package. Prepend the app package name.
+            fullName = context.getPackageName() + name;
+        } else if (name.indexOf('.') >= 0) {
+            // Fully qualified package name.
+            fullName = name;
+        } else {
+            // Assume stock behavior in this package.
+            fullName = "com.hendraanggrian.recyclerview.widget.PaginatedRecyclerview" + name;
+        }
+        try {
+            Map<String, Constructor<PlaceholderAdapter>> constructors =
+                PLACEHOLDER_CONSTRUCTORS.get();
+            if (constructors == null) {
+                constructors = new HashMap<>();
+                PLACEHOLDER_CONSTRUCTORS.set(constructors);
+            }
+            Constructor<PlaceholderAdapter> c = constructors.get(fullName);
+            if (c == null) {
+                final Class<PlaceholderAdapter> clazz = (Class<PlaceholderAdapter>) Class
+                    .forName(fullName, true, context.getClassLoader());
+                c = clazz.getConstructor();
+                constructors.put(fullName, c);
+            }
+            return c.newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(
+                "Could not inflate placeholder adapter subclass " + fullName, e);
         }
     }
 
@@ -312,22 +365,22 @@ public class PaginatedRecyclerView extends RecyclerView {
 
     /**
      * Base loading adapter that will be displayed when pagination is in progress.
-     * When extending this class, only {@link LoadingAdapter#onCreateViewHolder} and
-     * {@link LoadingAdapter#onBindViewHolder} is relevant and should be implemented.
+     * When extending this class, only {@link PlaceholderAdapter#onCreateViewHolder} and
+     * {@link PlaceholderAdapter#onBindViewHolder} is relevant and should be implemented.
      */
-    public static abstract class LoadingAdapter<VH extends ViewHolder> extends Adapter<VH> {
+    public static abstract class PlaceholderAdapter<VH extends ViewHolder> extends Adapter<VH> {
 
         /**
-         * Default {@link LoadingAdapter}, which is just an indeterminate {@link android.widget.ProgressBar}.
+         * Default {@link PlaceholderAdapter}, which is just an indeterminate {@link android.widget.ProgressBar}.
          */
-        public static LoadingAdapter<ViewHolder> DEFAULT =
-            new LoadingAdapter<ViewHolder>() {
+        public static PlaceholderAdapter<ViewHolder> DEFAULT =
+            new PlaceholderAdapter<ViewHolder>() {
                 @NonNull
                 @Override
                 public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
                     return new ViewHolder(LayoutInflater
                         .from(parent.getContext())
-                        .inflate(R.layout.paginated_loading_row, parent, false)) {
+                        .inflate(R.layout.recyclerview_paginated_placeholder, parent, false)) {
                     };
                 }
             };
