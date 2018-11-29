@@ -7,7 +7,10 @@ PaginatedRecyclerView
 
 ![demo_list][demo_list] ![demo_grid][demo_grid]
 
-Customizable pagination in Android RecyclerView.
+Customizable pagination in Android RecyclerView. Some of the features are:
+ * Placeholder view when page is being fetched.
+ * Error view with a retry button when page has failed to load.
+ * Works with `LinearLayoutManager` and `StaggeredGridLayoutManager`.
 
 Download
 --------

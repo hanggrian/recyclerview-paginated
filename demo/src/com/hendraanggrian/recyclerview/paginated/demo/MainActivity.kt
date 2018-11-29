@@ -1,6 +1,7 @@
 package com.hendraanggrian.recyclerview.paginated.demo
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
@@ -40,7 +41,8 @@ class MainActivity : AppCompatActivity() {
                             adapter!!.notifyItemInserted(list.size - 1)
                         }
                     }) {
-                        notifyPaginationCompleted()
+                        Log.d("AAAAA", it?.message)
+                        notifyPageError()
                     })
                 if (page == 50) notifyPaginationCompleted()
             }

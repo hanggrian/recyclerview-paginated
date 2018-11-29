@@ -7,27 +7,40 @@ import androidx.recyclerview.widget.RecyclerView;
 
 final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private static int TYPE_LOADING = Integer.MAX_VALUE - 50; // magic
+    private static final int TYPE_PLACEHOLDER = Integer.MAX_VALUE - 50; // magic
+    private static final int TYPE_ERROR = Integer.MAX_VALUE - 100; // magic
 
     private final RecyclerView.Adapter actualAdapter;
-    private final PaginatedRecyclerView.PlaceholderAdapter placeholderAdapter;
-    private boolean isDisplaying = true;
+    private final PaginatedRecyclerView.NonBindingAdapter placeholderAdapter;
+    private final PaginatedRecyclerView.NonBindingAdapter errorAdapter;
+
+    private boolean isPlaceholder = true;
+    private boolean isError = false;
 
     PaginationAdapterWrapper(
         RecyclerView.Adapter actualAdapter,
-        PaginatedRecyclerView.PlaceholderAdapter placeholderAdapter
+        PaginatedRecyclerView.NonBindingAdapter placeholderAdapter,
+        PaginatedRecyclerView.NonBindingAdapter errorAdapter
     ) {
         this.actualAdapter = actualAdapter;
         this.placeholderAdapter = placeholderAdapter;
+        this.errorAdapter = errorAdapter;
     }
 
     RecyclerView.Adapter getActualAdapter() {
         return actualAdapter;
     }
 
-    void setDisplaying(boolean display) {
-        if (isDisplaying != display) {
-            isDisplaying = display;
+    void setPlaceholder(boolean placeholder) {
+        if (isPlaceholder != placeholder) {
+            isPlaceholder = placeholder;
+            notifyDataSetChanged();
+        }
+    }
+
+    void setError(boolean error) {
+        if (isError != error) {
+            isError = error;
             notifyDataSetChanged();
         }
     }
@@ -35,15 +48,22 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return viewType == TYPE_LOADING
-            ? placeholderAdapter.onCreateViewHolder(parent, viewType)
-            : actualAdapter.onCreateViewHolder(parent, viewType);
+        switch (viewType) {
+            case TYPE_PLACEHOLDER:
+                return placeholderAdapter.onCreateViewHolder(parent, viewType);
+            case TYPE_ERROR:
+                return errorAdapter.onCreateViewHolder(parent, viewType);
+            default:
+                return actualAdapter.onCreateViewHolder(parent, viewType);
+        }
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        if (isLoadingRow(position)) {
+        if (isErrorRow(position)) {
+            errorAdapter.onBindViewHolder(holder, position);
+        } else if (isPlaceholderRow(position)) {
             placeholderAdapter.onBindViewHolder(holder, position);
         } else {
             actualAdapter.onBindViewHolder(holder, position);
@@ -52,21 +72,25 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
 
     @Override
     public int getItemCount() {
-        return isDisplaying
+        return isPlaceholder || isError
             ? actualAdapter.getItemCount() + 1
             : actualAdapter.getItemCount();
     }
 
     @Override
     public int getItemViewType(int position) {
-        return isLoadingRow(position)
-            ? TYPE_LOADING
-            : actualAdapter.getItemViewType(position);
+        if (isErrorRow(position)) {
+            return TYPE_ERROR;
+        } else if (isPlaceholderRow(position)) {
+            return TYPE_PLACEHOLDER;
+        } else {
+            return actualAdapter.getItemViewType(position);
+        }
     }
 
     @Override
     public long getItemId(int position) {
-        return isLoadingRow(position)
+        return isPlaceholderRow(position) || isErrorRow(position)
             ? RecyclerView.NO_ID
             : actualAdapter.getItemId(position);
     }
@@ -77,11 +101,19 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
         actualAdapter.setHasStableIds(hasStableIds);
     }
 
-    boolean isLoadingRow(int position) {
-        return isDisplaying && position == getLoadingRowPosition();
+    boolean isPlaceholderRow(int position) {
+        return isPlaceholder && position == getPlaceholderRowPosition();
     }
 
-    private int getLoadingRowPosition() {
-        return isDisplaying ? getItemCount() - 1 : -1;
+    private int getPlaceholderRowPosition() {
+        return isPlaceholder ? getItemCount() - 1 : -1;
+    }
+
+    boolean isErrorRow(int position) {
+        return isError && position == getErrorRowPosition();
+    }
+
+    private int getErrorRowPosition() {
+        return isError ? getItemCount() - 1 : -1;
     }
 }
