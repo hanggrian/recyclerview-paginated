@@ -38,12 +38,12 @@ dependencies {
     implementation(project(":$RELEASE_ARTIFACT"))
     implementation(kotlin("stdlib", VERSION_KOTLIN))
 
-    implementation(androidx("core", "core-ktx"))
-    implementation(androidx("appcompat"))
-    implementation(androidx("coordinatorlayout"))
-    implementation(androidx("recyclerview"))
-    implementation(androidx("cardview"))
-    implementation(material())
+    implementation(androidx("core", "core-ktx", "$VERSION_ANDROIDX-alpha03"))
+    implementation(androidx("appcompat", version = "$VERSION_ANDROIDX-alpha01"))
+    implementation(androidx("coordinatorlayout", version = "$VERSION_ANDROIDX-alpha01"))
+    implementation(androidx("recyclerview", version = "$VERSION_ANDROIDX-alpha01"))
+    implementation(androidx("cardview", version = "1.0.0"))
+    implementation(material("$VERSION_ANDROIDX-alpha02"))
 
     implementation(square("retrofit2", "adapter-rxjava2", VERSION_RETROFIT))
     implementation(square("retrofit2", "converter-gson", VERSION_RETROFIT))

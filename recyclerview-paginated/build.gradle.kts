@@ -11,7 +11,7 @@ android {
     defaultConfig {
         minSdkVersion(SDK_MIN)
         targetSdkVersion(SDK_TARGET)
-        versionName = VERSION_ANDROIDX
+        versionName = RELEASE_VERSION
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     sourceSets {
@@ -33,12 +33,14 @@ android {
         isCheckTestSources = true
     }
     libraryVariants.all {
-        generateBuildConfig?.enabled = false
+        generateBuildConfigProvider?.configure {
+            enabled = false
+        }
     }
 }
 
 dependencies {
-    implementation(androidx("recyclerview"))
+    implementation(androidx("recyclerview", version = "$VERSION_ANDROIDX-alpha01"))
 
     testImplementation(junit())
     testImplementation(truth())
