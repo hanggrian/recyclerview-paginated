@@ -10,25 +10,25 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
     private static final int TYPE_PLACEHOLDER = Integer.MAX_VALUE - 50; // magic
     private static final int TYPE_ERROR = Integer.MAX_VALUE - 100; // magic
 
-    private final RecyclerView.Adapter actualAdapter;
-    private final PaginatedRecyclerView.NonBindingAdapter placeholderAdapter;
-    private final PaginatedRecyclerView.NonBindingAdapter errorAdapter;
+    private final RecyclerView.Adapter originalAdapter;
+    private final PaginatedRecyclerView.BaseAdapter placeholderAdapter;
+    private final PaginatedRecyclerView.BaseAdapter errorAdapter;
 
     private boolean isPlaceholder = true;
     private boolean isError = false;
 
     PaginationAdapterWrapper(
-        RecyclerView.Adapter actualAdapter,
-        PaginatedRecyclerView.NonBindingAdapter placeholderAdapter,
-        PaginatedRecyclerView.NonBindingAdapter errorAdapter
+        RecyclerView.Adapter originalAdapter,
+        PaginatedRecyclerView.BaseAdapter placeholderAdapter,
+        PaginatedRecyclerView.BaseAdapter errorAdapter
     ) {
-        this.actualAdapter = actualAdapter;
+        this.originalAdapter = originalAdapter;
         this.placeholderAdapter = placeholderAdapter;
         this.errorAdapter = errorAdapter;
     }
 
-    RecyclerView.Adapter getActualAdapter() {
-        return actualAdapter;
+    RecyclerView.Adapter getOriginalAdapter() {
+        return originalAdapter;
     }
 
     void updateState(boolean isPlaceholder, boolean isError) {
@@ -46,7 +46,7 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
             case TYPE_ERROR:
                 return errorAdapter.onCreateViewHolder(parent, viewType);
             default:
-                return actualAdapter.onCreateViewHolder(parent, viewType);
+                return originalAdapter.onCreateViewHolder(parent, viewType);
         }
     }
 
@@ -58,15 +58,15 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
         } else if (isPlaceholderRow(position)) {
             placeholderAdapter.onBindViewHolder(holder, position);
         } else {
-            actualAdapter.onBindViewHolder(holder, position);
+            originalAdapter.onBindViewHolder(holder, position);
         }
     }
 
     @Override
     public int getItemCount() {
         return isPlaceholder || isError
-            ? actualAdapter.getItemCount() + 1
-            : actualAdapter.getItemCount();
+            ? originalAdapter.getItemCount() + 1
+            : originalAdapter.getItemCount();
     }
 
     @Override
@@ -76,7 +76,7 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
         } else if (isPlaceholderRow(position)) {
             return TYPE_PLACEHOLDER;
         } else {
-            return actualAdapter.getItemViewType(position);
+            return originalAdapter.getItemViewType(position);
         }
     }
 
@@ -84,13 +84,13 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
     public long getItemId(int position) {
         return isPlaceholderRow(position) || isErrorRow(position)
             ? RecyclerView.NO_ID
-            : actualAdapter.getItemId(position);
+            : originalAdapter.getItemId(position);
     }
 
     @Override
     public void setHasStableIds(boolean hasStableIds) {
         super.setHasStableIds(hasStableIds);
-        actualAdapter.setHasStableIds(hasStableIds);
+        originalAdapter.setHasStableIds(hasStableIds);
     }
 
     boolean isPlaceholderRow(int position) {

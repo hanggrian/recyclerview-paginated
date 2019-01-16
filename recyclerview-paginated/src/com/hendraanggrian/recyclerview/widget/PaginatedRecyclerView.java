@@ -7,12 +7,6 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
-import com.hendraanggrian.recyclerview.paginated.R;
-
-import java.lang.reflect.Constructor;
-import java.util.HashMap;
-import java.util.Map;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -20,10 +14,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import com.hendraanggrian.recyclerview.paginated.R;
+
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
+
 public class PaginatedRecyclerView extends RecyclerView {
 
     // Cache for placeholder and error adapters
-    private static final ThreadLocal<Map<String, Constructor<NonBindingAdapter>>>
+    private static final ThreadLocal<Map<String, Constructor<BaseAdapter>>>
         ADAPTER_CONSTRUCTORS = new ThreadLocal<>();
 
     private final OnScrollListener onScrollListener = new OnScrollListener() {
@@ -161,12 +161,19 @@ public class PaginatedRecyclerView extends RecyclerView {
 
             // For GridLayoutManager use separate/customisable span lookup for loading row
             if (getLayoutManager() instanceof GridLayoutManager) {
+                final int fakeLookupSpanSize;
+                if (getLayoutManager() instanceof GridLayoutManager) {
+                    // By default full span will be used for loading list item
+                    fakeLookupSpanSize = ((GridLayoutManager) getLayoutManager()).getSpanCount();
+                } else {
+                    fakeLookupSpanSize = 1;
+                }
                 spanSizeLookup = new PaginationSpanSizeLookup(
                     ((GridLayoutManager) getLayoutManager()).getSpanSizeLookup(),
                     new GridLayoutManager.SpanSizeLookup() {
                         @Override
                         public int getSpanSize(int position) {
-                            return ((GridLayoutManager) getLayoutManager()).getSpanCount();
+                            return fakeLookupSpanSize;
                         }
                     },
                     adapterWrapper
@@ -178,9 +185,9 @@ public class PaginatedRecyclerView extends RecyclerView {
             if (getAdapter() instanceof PaginationAdapterWrapper) {
                 final PaginationAdapterWrapper paginatedAdapter =
                     (PaginationAdapterWrapper) getAdapter();
-                final Adapter actualAdapter = paginatedAdapter.getActualAdapter();
-                actualAdapter.unregisterAdapterDataObserver(observer);
-                setAdapter(actualAdapter);
+                final Adapter originalAdapter = paginatedAdapter.getOriginalAdapter();
+                originalAdapter.unregisterAdapterDataObserver(observer);
+                setAdapter(originalAdapter);
             }
             if (getLayoutManager() instanceof GridLayoutManager && spanSizeLookup != null) {
                 ((GridLayoutManager) getLayoutManager())
@@ -276,7 +283,7 @@ public class PaginatedRecyclerView extends RecyclerView {
      * Stolen from {@code CoordinatorLayout.parseBehavior(Context, AttributeSet, String)}.
      */
     @SuppressWarnings("unchecked")
-    private static NonBindingAdapter parseAdapter(Context context, String name) {
+    private static BaseAdapter parseAdapter(Context context, String name) {
         if (TextUtils.isEmpty(name)) {
             return null;
         }
@@ -292,15 +299,15 @@ public class PaginatedRecyclerView extends RecyclerView {
             fullName = "com.hendraanggrian.recyclerview.widget.PaginatedRecyclerview" + name;
         }
         try {
-            Map<String, Constructor<NonBindingAdapter>> constructors =
+            Map<String, Constructor<BaseAdapter>> constructors =
                 ADAPTER_CONSTRUCTORS.get();
             if (constructors == null) {
                 constructors = new HashMap<>();
                 ADAPTER_CONSTRUCTORS.set(constructors);
             }
-            Constructor<NonBindingAdapter> c = constructors.get(fullName);
+            Constructor<BaseAdapter> c = constructors.get(fullName);
             if (c == null) {
-                final Class<NonBindingAdapter> clazz = (Class<NonBindingAdapter>) Class
+                final Class<BaseAdapter> clazz = (Class<BaseAdapter>) Class
                     .forName(fullName, true, context.getClassLoader());
                 c = clazz.getConstructor();
                 constructors.put(fullName, c);
@@ -340,7 +347,7 @@ public class PaginatedRecyclerView extends RecyclerView {
             onPaginate(page);
         }
 
-        void addCallbacks(Runnable onCompleted, Runnable onError){
+        void addCallbacks(Runnable onCompleted, Runnable onError) {
             this.onCompleted = onCompleted;
             this.onError = onError;
         }
@@ -409,10 +416,9 @@ public class PaginatedRecyclerView extends RecyclerView {
     /**
      * Base loading adapter that will be displayed when pagination is in progress.
      * When extending this class, only {@link androidx.recyclerview.widget.RecyclerView.Adapter#onCreateViewHolder} and
-     * {@link NonBindingAdapter#onBindViewHolder} is relevant and should be implemented.
+     * {@link BaseAdapter#onBindViewHolder} is relevant and should be implemented.
      */
-    public static abstract class NonBindingAdapter<VH extends ViewHolder> extends Adapter<VH> {
-
+    public static abstract class BaseAdapter<VH extends ViewHolder> extends Adapter<VH> {
 
         /**
          * It doesn't matter if this adapter is empty,
@@ -431,8 +437,7 @@ public class PaginatedRecyclerView extends RecyclerView {
         }
     }
 
-    public static abstract class PlaceholderAdapter<VH extends ViewHolder>
-        extends NonBindingAdapter<VH> {
+    public static abstract class PlaceholderAdapter<VH extends ViewHolder> extends BaseAdapter<VH> {
 
         /**
          * Default placeholder adapter, which is just an indeterminate progress bar.
@@ -449,8 +454,7 @@ public class PaginatedRecyclerView extends RecyclerView {
         };
     }
 
-    public static abstract class ErrorAdapter<VH extends ViewHolder>
-        extends NonBindingAdapter<VH> {
+    public static abstract class ErrorAdapter<VH extends ViewHolder> extends BaseAdapter<VH> {
 
         /**
          * Default placeholder adapter, which is just an error text.

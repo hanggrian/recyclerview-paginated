@@ -5,17 +5,17 @@ import androidx.recyclerview.widget.GridLayoutManager;
 final class PaginationSpanSizeLookup extends GridLayoutManager.SpanSizeLookup {
 
     private final GridLayoutManager.SpanSizeLookup originalLookup;
-    private final GridLayoutManager.SpanSizeLookup loadingLookup;
-    private final PaginationAdapterWrapper paginationAdapterWrapper;
+    private final GridLayoutManager.SpanSizeLookup fakeLookup;
+    private final PaginationAdapterWrapper adapterWrapper;
 
     PaginationSpanSizeLookup(
         GridLayoutManager.SpanSizeLookup originalLookup,
-        GridLayoutManager.SpanSizeLookup loadingLookup,
-        PaginationAdapterWrapper paginationAdapterWrapper
+        GridLayoutManager.SpanSizeLookup fakeLookup,
+        PaginationAdapterWrapper adapterWrapper
     ) {
         this.originalLookup = originalLookup;
-        this.loadingLookup = loadingLookup;
-        this.paginationAdapterWrapper = paginationAdapterWrapper;
+        this.fakeLookup = fakeLookup;
+        this.adapterWrapper = adapterWrapper;
     }
 
     GridLayoutManager.SpanSizeLookup getOriginalLookup() {
@@ -24,9 +24,8 @@ final class PaginationSpanSizeLookup extends GridLayoutManager.SpanSizeLookup {
 
     @Override
     public int getSpanSize(int position) {
-        return paginationAdapterWrapper.isPlaceholderRow(position) ||
-            paginationAdapterWrapper.isErrorRow(position)
-            ? loadingLookup.getSpanSize(position)
+        return adapterWrapper.isPlaceholderRow(position) || adapterWrapper.isErrorRow(position)
+            ? fakeLookup.getSpanSize(position)
             : originalLookup.getSpanSize(position);
     }
 }
