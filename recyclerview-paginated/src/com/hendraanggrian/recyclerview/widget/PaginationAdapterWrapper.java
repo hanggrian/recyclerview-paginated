@@ -23,8 +23,12 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
         PaginatedRecyclerView.BaseAdapter errorAdapter
     ) {
         this.originalAdapter = originalAdapter;
-        this.placeholderAdapter = placeholderAdapter;
-        this.errorAdapter = errorAdapter;
+        this.placeholderAdapter = placeholderAdapter != null
+            ? placeholderAdapter
+            : PaginatedRecyclerView.PlaceholderAdapter.DEFAULT;
+        this.errorAdapter = errorAdapter != null
+            ? errorAdapter
+            : PaginatedRecyclerView.ErrorAdapter.DEFAULT;
     }
 
     RecyclerView.Adapter getOriginalAdapter() {

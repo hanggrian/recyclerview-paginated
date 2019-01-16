@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.hendraanggrian.recyclerview.widget.PaginatedRecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/paginatedRecyclerView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:errorAdapter="com.hendraanggrian.recyclerview.paginated.adapter.TestErrorAdapter"
+    app:placeholderAdapter="com.hendraanggrian.recyclerview.paginated.adapter.TestPlaceholderAdapter" />

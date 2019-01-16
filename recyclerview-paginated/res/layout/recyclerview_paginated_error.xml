@@ -9,6 +9,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:gravity="center"
-        android:text="@string/this_content_is_not_available_online"
+        android:text="@string/this_content_is_not_available_offline"
         android:textAppearance="?android:attr/textAppearanceListItem" />
 </FrameLayout>

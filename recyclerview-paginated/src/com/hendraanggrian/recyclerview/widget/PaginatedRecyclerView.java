@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -23,8 +24,8 @@ import java.util.Map;
 public class PaginatedRecyclerView extends RecyclerView {
 
     // Cache for placeholder and error adapters
-    private static final ThreadLocal<Map<String, Constructor<BaseAdapter>>>
-        ADAPTER_CONSTRUCTORS = new ThreadLocal<>();
+    private static final ThreadLocal<Map<String, Constructor<BaseAdapter>>> ADAPTER_CONSTRUCTORS =
+        new ThreadLocal<>();
 
     private final OnScrollListener onScrollListener = new OnScrollListener() {
         // Each time when list is scrolled check if end of the list is reached
@@ -87,7 +88,7 @@ public class PaginatedRecyclerView extends RecyclerView {
 
     private PlaceholderAdapter placeholderAdapter;
     private ErrorAdapter errorAdapter;
-    private int threshold;
+    private int threshold = 3;
 
     public PaginatedRecyclerView(@NonNull Context context) {
         this(context, null);
@@ -107,17 +108,13 @@ public class PaginatedRecyclerView extends RecyclerView {
             attrs, R.styleable.PaginatedRecyclerView, defStyle, 0);
         if (a.hasValue(R.styleable.PaginatedRecyclerView_placeholderAdapter)) {
             placeholderAdapter = (PlaceholderAdapter) parseAdapter(
-                context,
-                a.getString(R.styleable.PaginatedRecyclerView_placeholderAdapter)
-            );
+                context, a.getString(R.styleable.PaginatedRecyclerView_placeholderAdapter));
         }
         if (a.hasValue(R.styleable.PaginatedRecyclerView_errorAdapter)) {
             errorAdapter = (ErrorAdapter) parseAdapter(
-                context,
-                a.getString(R.styleable.PaginatedRecyclerView_errorAdapter)
-            );
+                context, a.getString(R.styleable.PaginatedRecyclerView_errorAdapter));
         }
-        threshold = a.getInteger(R.styleable.PaginatedRecyclerView_paginationThreshold, 5);
+        setThreshold(a.getInteger(R.styleable.PaginatedRecyclerView_paginationThreshold, 0));
         a.recycle();
     }
 
@@ -133,9 +130,8 @@ public class PaginatedRecyclerView extends RecyclerView {
         if (getAdapter() == null) {
             throw new IllegalStateException("Adapter must be initialized before Pagination!");
         }
+        this.pagination = pagination;
         if (pagination != null) {
-            this.pagination = pagination;
-
             // Trigger initial check since adapter might not have any items initially so no scrolling events upon
             // RecyclerView (that triggers check) will occur
             pagination.paginate();
@@ -144,7 +140,7 @@ public class PaginatedRecyclerView extends RecyclerView {
 
             getAdapter().registerAdapterDataObserver(observer);
             adapterWrapper = new PaginationAdapterWrapper(
-                getAdapter(), getPlaceholderAdapter(), getErrorAdapter());
+                getAdapter(), placeholderAdapter, errorAdapter);
             setAdapter(adapterWrapper);
 
             pagination.addCallbacks(new Runnable() {
@@ -161,19 +157,13 @@ public class PaginatedRecyclerView extends RecyclerView {
 
             // For GridLayoutManager use separate/customisable span lookup for loading row
             if (getLayoutManager() instanceof GridLayoutManager) {
-                final int fakeLookupSpanSize;
-                if (getLayoutManager() instanceof GridLayoutManager) {
-                    // By default full span will be used for loading list item
-                    fakeLookupSpanSize = ((GridLayoutManager) getLayoutManager()).getSpanCount();
-                } else {
-                    fakeLookupSpanSize = 1;
-                }
+                final int spanCount = ((GridLayoutManager) getLayoutManager()).getSpanCount();
                 spanSizeLookup = new PaginationSpanSizeLookup(
                     ((GridLayoutManager) getLayoutManager()).getSpanSizeLookup(),
                     new GridLayoutManager.SpanSizeLookup() {
                         @Override
                         public int getSpanSize(int position) {
-                            return fakeLookupSpanSize;
+                            return spanCount;
                         }
                     },
                     adapterWrapper
@@ -193,34 +183,29 @@ public class PaginatedRecyclerView extends RecyclerView {
                 ((GridLayoutManager) getLayoutManager())
                     .setSpanSizeLookup(spanSizeLookup.getOriginalLookup());
             }
-            this.pagination = null;
             adapterWrapper = null;
             spanSizeLookup = null;
         }
     }
 
-    @NonNull
+    @Nullable
     public PlaceholderAdapter getPlaceholderAdapter() {
-        return placeholderAdapter != null
-            ? placeholderAdapter
-            : PlaceholderAdapter.DEFAULT;
+        return placeholderAdapter;
     }
 
-    public void setPlaceholderAdapter(@NonNull PlaceholderAdapter adapter) {
+    public void setPlaceholderAdapter(@Nullable PlaceholderAdapter adapter) {
         if (placeholderAdapter != adapter) {
             placeholderAdapter = adapter;
             forceResetPagination();
         }
     }
 
-    @NonNull
+    @Nullable
     public ErrorAdapter getErrorAdapter() {
-        return errorAdapter != null
-            ? errorAdapter
-            : ErrorAdapter.DEFAULT;
+        return errorAdapter;
     }
 
-    public void setErrorAdapter(@NonNull ErrorAdapter adapter) {
+    public void setErrorAdapter(@Nullable ErrorAdapter adapter) {
         if (errorAdapter != adapter) {
             errorAdapter = adapter;
             forceResetPagination();
@@ -233,11 +218,12 @@ public class PaginatedRecyclerView extends RecyclerView {
      *
      * @return threshold, always larger than 0
      */
+    @IntRange(from = 1, to = Integer.MAX_VALUE)
     public int getThreshold() {
         return threshold;
     }
 
-    public void setThreshold(int threshold) {
+    public void setThreshold(@IntRange(from = 1, to = Integer.MAX_VALUE) int threshold) {
         if (threshold > 0) {
             this.threshold = threshold;
         }
@@ -255,8 +241,7 @@ public class PaginatedRecyclerView extends RecyclerView {
         final int firstVisibleItemPosition;
         final LayoutManager manager = getLayoutManager();
         if (manager instanceof LinearLayoutManager) {
-            firstVisibleItemPosition = ((LinearLayoutManager) manager)
-                .findFirstVisibleItemPosition();
+            firstVisibleItemPosition = ((LinearLayoutManager) manager).findFirstVisibleItemPosition();
         } else if (manager instanceof StaggeredGridLayoutManager) {
             // https://code.google.com/p/android/issues/detail?id=181461
             firstVisibleItemPosition = manager.getChildCount() > 0
@@ -296,27 +281,26 @@ public class PaginatedRecyclerView extends RecyclerView {
             fullName = name;
         } else {
             // Assume stock behavior in this package.
-            fullName = "com.hendraanggrian.recyclerview.widget.PaginatedRecyclerview" + name;
+            fullName = "com.hendraanggrian.recyclerview.widget.PaginatedRecyclerview." + name;
         }
         try {
-            Map<String, Constructor<BaseAdapter>> constructors =
-                ADAPTER_CONSTRUCTORS.get();
+            Map<String, Constructor<BaseAdapter>> constructors = ADAPTER_CONSTRUCTORS.get();
             if (constructors == null) {
                 constructors = new HashMap<>();
                 ADAPTER_CONSTRUCTORS.set(constructors);
             }
             Constructor<BaseAdapter> c = constructors.get(fullName);
             if (c == null) {
-                final Class<BaseAdapter> clazz = (Class<BaseAdapter>) Class
-                    .forName(fullName, true, context.getClassLoader());
+                final Class<BaseAdapter> clazz = (Class<BaseAdapter>) context.getClassLoader()
+                    .loadClass(fullName);
                 c = clazz.getConstructor();
+                c.setAccessible(true);
                 constructors.put(fullName, c);
             }
             return c.newInstance();
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException(
-                "Could not inflate placeholder adapter subclass " + fullName, e);
+            throw new RuntimeException("Could not inflate adapter subclass " + fullName, e);
         }
     }
 
@@ -406,10 +390,7 @@ public class PaginatedRecyclerView extends RecyclerView {
         }
 
         public enum State {
-            LOADING,
-            LOADED,
-            ERROR,
-            COMPLETE
+            LOADING, LOADED, ERROR, COMPLETE
         }
     }
 
