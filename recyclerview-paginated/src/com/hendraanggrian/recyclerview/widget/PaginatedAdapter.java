@@ -13,8 +13,9 @@ final class PaginatedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private static final int TYPE_ERROR = Integer.MAX_VALUE - 100; // magic
 
     final RecyclerView.Adapter originalAdapter;
-    private PaginatedRecyclerView view;
-    private PaginatedRecyclerView.PaginationState state; // only has to know about placeholder and error
+    private RecyclerView.Adapter placeholderAdapter;
+    private RecyclerView.Adapter errorAdapter;
+    private PaginatedRecyclerView.PaginationState state; // this adapter has its own state
 
     PaginatedAdapter(RecyclerView.Adapter originalAdapter) {
         this.originalAdapter = originalAdapter;
@@ -23,7 +24,13 @@ final class PaginatedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     @Override
     public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
-        view = (PaginatedRecyclerView) recyclerView;
+        final PaginatedRecyclerView view = (PaginatedRecyclerView) recyclerView;
+        placeholderAdapter = view.getPlaceholderAdapter() != null
+            ? view.getPlaceholderAdapter()
+            : PaginatedRecyclerView.PlaceholderAdapter.DEFAULT;
+        errorAdapter = view.getErrorAdapter() != null
+            ? view.getErrorAdapter()
+            : PaginatedRecyclerView.ErrorAdapter.DEFAULT;
     }
 
     void notifyStateChanged(PaginatedRecyclerView.PaginationState state) {
@@ -36,9 +43,9 @@ final class PaginatedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         switch (viewType) {
             case TYPE_PLACEHOLDER:
-                return view.getPlaceholderAdapter().onCreateViewHolder(parent, viewType);
+                return placeholderAdapter.onCreateViewHolder(parent, viewType);
             case TYPE_ERROR:
-                return view.getErrorAdapter().onCreateViewHolder(parent, viewType);
+                return errorAdapter.onCreateViewHolder(parent, viewType);
             default:
                 return originalAdapter.onCreateViewHolder(parent, viewType);
         }
@@ -48,9 +55,9 @@ final class PaginatedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     @SuppressWarnings("unchecked")
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if (isErrorRow(position)) {
-            view.getErrorAdapter().onBindViewHolder(holder, position);
+            errorAdapter.onBindViewHolder(holder, position);
         } else if (isPlaceholderRow(position)) {
-            view.getPlaceholderAdapter().onBindViewHolder(holder, position);
+            placeholderAdapter.onBindViewHolder(holder, position);
         } else {
             originalAdapter.onBindViewHolder(holder, position);
         }

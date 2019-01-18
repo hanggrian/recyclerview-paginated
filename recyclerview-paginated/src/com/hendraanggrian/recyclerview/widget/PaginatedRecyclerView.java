@@ -158,7 +158,8 @@ public class PaginatedRecyclerView extends RecyclerView {
             if (getLayoutManager() instanceof GridLayoutManager) {
                 final GridLayoutManager lm = (GridLayoutManager) getLayoutManager();
                 gridSpanSizeLookup = new PaginatedSpanSizeLookup(lm.getSpanSizeLookup(),
-                    lm.getSpanCount(), paginatedAdapter);
+                    lm.getSpanCount(), paginatedAdapter
+                );
                 ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(gridSpanSizeLookup);
             }
         } else {
@@ -179,28 +180,24 @@ public class PaginatedRecyclerView extends RecyclerView {
         this.pagination = pagination;
     }
 
-    @NonNull
+    @Nullable
     public PlaceholderAdapter getPlaceholderAdapter() {
-        return placeholderAdapter != null
-            ? placeholderAdapter
-            : PlaceholderAdapter.DEFAULT;
+        return placeholderAdapter;
     }
 
-    public void setPlaceholderAdapter(@NonNull PlaceholderAdapter adapter) {
+    public void setPlaceholderAdapter(@Nullable PlaceholderAdapter adapter) {
         if (placeholderAdapter != adapter) {
             placeholderAdapter = adapter;
             forceResetPagination();
         }
     }
 
-    @NonNull
+    @Nullable
     public ErrorAdapter getErrorAdapter() {
-        return errorAdapter != null
-            ? errorAdapter
-            : ErrorAdapter.DEFAULT;
+        return errorAdapter;
     }
 
-    public void setErrorAdapter(@NonNull ErrorAdapter adapter) {
+    public void setErrorAdapter(@Nullable ErrorAdapter adapter) {
         if (errorAdapter != adapter) {
             errorAdapter = adapter;
             forceResetPagination();
