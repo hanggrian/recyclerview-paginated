@@ -10,28 +10,27 @@ final class PaginatedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private static final int TYPE_PLACEHOLDER = Integer.MAX_VALUE - 50; // magic
     private static final int TYPE_ERROR = Integer.MAX_VALUE - 100; // magic
 
-    private final RecyclerView.Adapter originalAdapter;
-    private final RecyclerView.Adapter placeholderAdapter;
-    private final RecyclerView.Adapter errorAdapter;
+    private PaginatedRecyclerView view;
+    final RecyclerView.Adapter originalAdapter;
+    private RecyclerView.Adapter placeholderAdapter;
+    private RecyclerView.Adapter errorAdapter;
 
     private PaginatedRecyclerView.PaginationState state;
 
-    PaginatedAdapter(
-        RecyclerView.Adapter originalAdapter,
-        RecyclerView.Adapter placeholderAdapter,
-        RecyclerView.Adapter errorAdapter
-    ) {
+    PaginatedAdapter(RecyclerView.Adapter originalAdapter) {
         this.originalAdapter = originalAdapter;
-        this.placeholderAdapter = placeholderAdapter != null
-            ? placeholderAdapter
-            : PaginatedRecyclerView.PlaceholderAdapter.DEFAULT;
-        this.errorAdapter = errorAdapter != null
-            ? errorAdapter
-            : PaginatedRecyclerView.ErrorAdapter.DEFAULT;
     }
 
-    RecyclerView.Adapter getOriginalAdapter() {
-        return originalAdapter;
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        view = (PaginatedRecyclerView) recyclerView;
+        placeholderAdapter = view.getPlaceholderAdapter() != null
+            ? view.getPlaceholderAdapter()
+            : PaginatedRecyclerView.PlaceholderAdapter.DEFAULT;
+        errorAdapter = view.getErrorAdapter() != null
+            ? view.getErrorAdapter()
+            : PaginatedRecyclerView.ErrorAdapter.DEFAULT;
     }
 
     void updateState(PaginatedRecyclerView.PaginationState state) {

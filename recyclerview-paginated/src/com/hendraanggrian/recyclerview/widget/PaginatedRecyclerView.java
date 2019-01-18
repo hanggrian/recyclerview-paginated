@@ -139,7 +139,7 @@ public class PaginatedRecyclerView extends RecyclerView {
             addOnScrollListener(onScrollListener);
 
             getAdapter().registerAdapterDataObserver(observer);
-            paginatedAdapter = new PaginatedAdapter(getAdapter(), placeholderAdapter, errorAdapter);
+            paginatedAdapter = new PaginatedAdapter(getAdapter());
             setAdapter(paginatedAdapter);
 
             pagination.setOnCompleted(new Runnable() {
@@ -175,13 +175,13 @@ public class PaginatedRecyclerView extends RecyclerView {
             if (getAdapter() instanceof PaginatedAdapter) {
                 final PaginatedAdapter paginatedAdapter =
                     (PaginatedAdapter) getAdapter();
-                final Adapter originalAdapter = paginatedAdapter.getOriginalAdapter();
+                final Adapter originalAdapter = paginatedAdapter.originalAdapter;
                 originalAdapter.unregisterAdapterDataObserver(observer);
                 setAdapter(originalAdapter);
             }
             if (getLayoutManager() instanceof GridLayoutManager && spanSizeLookup != null) {
                 ((GridLayoutManager) getLayoutManager())
-                    .setSpanSizeLookup(spanSizeLookup.getOriginalLookup());
+                    .setSpanSizeLookup(spanSizeLookup.originalLookup);
             }
             paginatedAdapter = null;
             spanSizeLookup = null;
@@ -241,7 +241,8 @@ public class PaginatedRecyclerView extends RecyclerView {
         final int firstVisibleItemPosition;
         final LayoutManager manager = getLayoutManager();
         if (manager instanceof LinearLayoutManager) {
-            firstVisibleItemPosition = ((LinearLayoutManager) manager).findFirstVisibleItemPosition();
+            firstVisibleItemPosition =
+                ((LinearLayoutManager) manager).findFirstVisibleItemPosition();
         } else if (manager instanceof StaggeredGridLayoutManager) {
             // https://code.google.com/p/android/issues/detail?id=181461
             firstVisibleItemPosition = manager.getChildCount() > 0
