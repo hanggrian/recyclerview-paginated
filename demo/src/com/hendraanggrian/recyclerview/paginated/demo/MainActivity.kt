@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
         recyclerView.pagination = object : PaginatedRecyclerView.Pagination() {
             override fun onNextPage(page: Int) {
-                disposables.add(TypicodeServices.create()
+                disposables += TypicodeServices.create()
                     .posts(page)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }) {
                         notifyPageError()
-                    })
+                    }
                 if (page == 50) {
                     notifyPaginationCompleted()
                 }
@@ -70,13 +70,12 @@ class MainActivity : AppCompatActivity() {
             R.id.item_restart -> recyclerView.pagination!!.notifyPaginationRestart()
             R.id.item_custom_adapters -> {
                 item.isChecked = !item.isChecked
-                recyclerView.placeholderAdapter = when {
-                    item.isChecked -> CustomPlaceholderAdapter()
-                    else -> PaginatedRecyclerView.PlaceholderAdapter.DEFAULT
-                }
-                recyclerView.errorAdapter = when {
-                    item.isChecked -> CustomErrorAdapter()
-                    else -> PaginatedRecyclerView.ErrorAdapter.DEFAULT
+                if (item.isChecked) {
+                    recyclerView.placeholderAdapter = CustomPlaceholderAdapter()
+                    recyclerView.errorAdapter = CustomErrorAdapter()
+                } else {
+                    recyclerView.placeholderAdapter = null
+                    recyclerView.errorAdapter = null
                 }
             }
         }

@@ -7,7 +7,6 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
-import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -114,7 +113,9 @@ public class PaginatedRecyclerView extends RecyclerView {
             errorAdapter = (ErrorAdapter) parseAdapter(
                 context, a.getString(R.styleable.PaginatedRecyclerView_errorAdapter));
         }
-        setThreshold(a.getInteger(R.styleable.PaginatedRecyclerView_paginationThreshold, 0));
+        if (a.hasValue(R.styleable.PaginatedRecyclerView_paginationThreshold)) {
+            setThreshold(a.getInteger(R.styleable.PaginatedRecyclerView_paginationThreshold, 0));
+        }
         a.recycle();
     }
 
@@ -130,6 +131,7 @@ public class PaginatedRecyclerView extends RecyclerView {
         if (getAdapter() == null) {
             throw new IllegalStateException("Adapter must be initialized");
         }
+        this.pagination = pagination;
         if (pagination != null) {
             // Trigger initial check since adapter might not have any items initially so no scrolling events upon
             // RecyclerView (that triggers check) will occur
@@ -177,7 +179,6 @@ public class PaginatedRecyclerView extends RecyclerView {
             paginatedAdapter = null;
             gridSpanSizeLookup = null;
         }
-        this.pagination = pagination;
     }
 
     @Nullable
@@ -210,12 +211,11 @@ public class PaginatedRecyclerView extends RecyclerView {
      *
      * @return threshold, always larger than 0
      */
-    @IntRange(from = 1, to = Integer.MAX_VALUE)
     public int getThreshold() {
         return threshold;
     }
 
-    public void setThreshold(@IntRange(from = 1, to = Integer.MAX_VALUE) int threshold) {
+    public void setThreshold(int threshold) {
         if (threshold > 0) {
             this.threshold = threshold;
         }
@@ -241,9 +241,8 @@ public class PaginatedRecyclerView extends RecyclerView {
                 ? ((StaggeredGridLayoutManager) manager).findFirstVisibleItemPositions(null)[0]
                 : 0;
         } else {
-            throw new IllegalStateException(
-                "LayoutManager needs to subclass LinearLayoutManager or " +
-                    "StaggeredGridLayoutManager");
+            throw new IllegalStateException("LayoutManager needs to subclass" +
+                "LinearLayoutManager or StaggeredGridLayoutManager");
         }
         // Check if end of the list is reached (counting threshold) or if there is no items at all
         final int visibleItemCount = getChildCount();
@@ -299,7 +298,8 @@ public class PaginatedRecyclerView extends RecyclerView {
 
     /**
      * Class that controls pagination behavior of {@link RecyclerView},
-     * much like {@link androidx.recyclerview.widget.RecyclerView.Adapter} controlling item view behavior.
+     * much like {@link androidx.recyclerview.widget.RecyclerView.Adapter}
+     * controlling item view behavior.
      */
     public static abstract class Pagination {
         private int page = getPageStart();
@@ -386,7 +386,8 @@ public class PaginatedRecyclerView extends RecyclerView {
 
     /**
      * Base loading adapter that will be displayed when pagination is in progress.
-     * When extending this class, only {@link androidx.recyclerview.widget.RecyclerView.Adapter#onCreateViewHolder} and
+     * When extending this class, only
+     * {@link androidx.recyclerview.widget.RecyclerView.Adapter#onCreateViewHolder} and
      * {@link BaseAdapter#onBindViewHolder} is relevant and should be implemented.
      */
     public static abstract class BaseAdapter<VH extends ViewHolder> extends Adapter<VH> {

@@ -11,29 +11,29 @@ import retrofit2.http.Path
 
 object TypicodeServices {
 
-    private const val API = "https://jsonplaceholder.typicode.com/"
-
-    private val loggingInterceptor = HttpLoggingInterceptor()
-        .setLevel(HttpLoggingInterceptor.Level.BODY)
-    private val okhttp = OkHttpClient.Builder()
-    private val retrofit = Retrofit.Builder()
-        .baseUrl(API)
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-        .addConverterFactory(GsonConverterFactory.create())
-    private var cache = retrofit.build()
-
-    fun create(): Service {
-        if (BuildConfig.DEBUG && !okhttp.interceptors().contains(loggingInterceptor)) {
-            okhttp.addInterceptor(loggingInterceptor)
-            retrofit.client(okhttp.build())
-            cache = retrofit.build()
-        }
-        return cache.create(Service::class.java)
-    }
-
     interface Service {
 
         @GET("posts/{id}")
         fun posts(@Path("id") id: Int): Single<Post>
+    }
+
+    private const val API = "https://jsonplaceholder.typicode.com/"
+
+    private val loggingInterceptor = HttpLoggingInterceptor()
+        .setLevel(HttpLoggingInterceptor.Level.BODY)
+    private val clientBuilder = OkHttpClient.Builder()
+    private val retrofitBuilder = Retrofit.Builder()
+        .baseUrl(API)
+        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+        .addConverterFactory(GsonConverterFactory.create())
+    private var retrofit = retrofitBuilder.build()
+
+    fun create(): Service {
+        if (BuildConfig.DEBUG && !clientBuilder.interceptors().contains(loggingInterceptor)) {
+            clientBuilder.addInterceptor(loggingInterceptor)
+            retrofitBuilder.client(clientBuilder.build())
+            retrofit = retrofitBuilder.build()
+        }
+        return retrofit.create(Service::class.java)
     }
 }
