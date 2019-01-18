@@ -2,20 +2,20 @@ package com.hendraanggrian.recyclerview.widget;
 
 import androidx.recyclerview.widget.GridLayoutManager;
 
-final class PaginationSpanSizeLookup extends GridLayoutManager.SpanSizeLookup {
+final class PaginatedSpanSizeLookup extends GridLayoutManager.SpanSizeLookup {
 
     private final GridLayoutManager.SpanSizeLookup originalLookup;
     private final GridLayoutManager.SpanSizeLookup fakeLookup;
-    private final PaginationAdapterWrapper adapterWrapper;
+    private final PaginatedAdapter adapter;
 
-    PaginationSpanSizeLookup(
+    PaginatedSpanSizeLookup(
         GridLayoutManager.SpanSizeLookup originalLookup,
         GridLayoutManager.SpanSizeLookup fakeLookup,
-        PaginationAdapterWrapper adapterWrapper
+        PaginatedAdapter adapter
     ) {
         this.originalLookup = originalLookup;
         this.fakeLookup = fakeLookup;
-        this.adapterWrapper = adapterWrapper;
+        this.adapter = adapter;
     }
 
     GridLayoutManager.SpanSizeLookup getOriginalLookup() {
@@ -24,7 +24,7 @@ final class PaginationSpanSizeLookup extends GridLayoutManager.SpanSizeLookup {
 
     @Override
     public int getSpanSize(int position) {
-        return adapterWrapper.isPlaceholderRow(position) || adapterWrapper.isErrorRow(position)
+        return adapter.isPlaceholderRow(position) || adapter.isErrorRow(position)
             ? fakeLookup.getSpanSize(position)
             : originalLookup.getSpanSize(position);
     }

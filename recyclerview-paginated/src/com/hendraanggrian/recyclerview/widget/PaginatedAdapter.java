@@ -5,22 +5,21 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+final class PaginatedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int TYPE_PLACEHOLDER = Integer.MAX_VALUE - 50; // magic
     private static final int TYPE_ERROR = Integer.MAX_VALUE - 100; // magic
 
     private final RecyclerView.Adapter originalAdapter;
-    private final PaginatedRecyclerView.BaseAdapter placeholderAdapter;
-    private final PaginatedRecyclerView.BaseAdapter errorAdapter;
+    private final RecyclerView.Adapter placeholderAdapter;
+    private final RecyclerView.Adapter errorAdapter;
 
-    private boolean isPlaceholder = true;
-    private boolean isError = false;
+    private PaginatedRecyclerView.PaginationState state;
 
-    PaginationAdapterWrapper(
+    PaginatedAdapter(
         RecyclerView.Adapter originalAdapter,
-        PaginatedRecyclerView.BaseAdapter placeholderAdapter,
-        PaginatedRecyclerView.BaseAdapter errorAdapter
+        RecyclerView.Adapter placeholderAdapter,
+        RecyclerView.Adapter errorAdapter
     ) {
         this.originalAdapter = originalAdapter;
         this.placeholderAdapter = placeholderAdapter != null
@@ -35,9 +34,8 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
         return originalAdapter;
     }
 
-    void updateState(boolean isPlaceholder, boolean isError) {
-        this.isPlaceholder = isPlaceholder;
-        this.isError = isError;
+    void updateState(PaginatedRecyclerView.PaginationState state) {
+        this.state = state;
         notifyDataSetChanged();
     }
 
@@ -68,7 +66,8 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
 
     @Override
     public int getItemCount() {
-        return isPlaceholder || isError
+        return state == PaginatedRecyclerView.PaginationState.LOADING ||
+            state == PaginatedRecyclerView.PaginationState.ERROR
             ? originalAdapter.getItemCount() + 1
             : originalAdapter.getItemCount();
     }
@@ -98,18 +97,22 @@ final class PaginationAdapterWrapper extends RecyclerView.Adapter<RecyclerView.V
     }
 
     boolean isPlaceholderRow(int position) {
-        return isPlaceholder && position == getPlaceholderRowPosition();
+        return state == PaginatedRecyclerView.PaginationState.LOADING &&
+            position == getPlaceholderRowPosition();
     }
 
     private int getPlaceholderRowPosition() {
-        return isPlaceholder ? getItemCount() - 1 : -1;
+        return state == PaginatedRecyclerView.PaginationState.LOADING
+            ? getItemCount() - 1 : -1;
     }
 
     boolean isErrorRow(int position) {
-        return isError && position == getErrorRowPosition();
+        return state == PaginatedRecyclerView.PaginationState.ERROR &&
+            position == getErrorRowPosition();
     }
 
     private int getErrorRowPosition() {
-        return isError ? getItemCount() - 1 : -1;
+        return state == PaginatedRecyclerView.PaginationState.ERROR
+            ? getItemCount() - 1 : -1;
     }
 }
