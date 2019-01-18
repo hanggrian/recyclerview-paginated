@@ -31,7 +31,7 @@ public class MainActivity2 extends AppCompatActivity {
             }
 
             @Override
-            public void onPaginate(int page) {
+            public void onNextPage(int page) {
 
             }
         };

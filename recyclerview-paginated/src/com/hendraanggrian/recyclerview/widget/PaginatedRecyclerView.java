@@ -77,14 +77,14 @@ public class PaginatedRecyclerView extends RecyclerView {
         }
 
         private void calculatePagination() {
-            paginatedAdapter.updateState(PaginationState.LOADING);
+            paginatedAdapter.notifyStateChanged(PaginationState.LOADING);
             calculateEndOffset();
         }
     };
 
     private Pagination pagination;
     private PaginatedAdapter paginatedAdapter;
-    private PaginatedSpanSizeLookup spanSizeLookup;
+    private PaginatedSpanSizeLookup gridSpanSizeLookup;
 
     private PlaceholderAdapter placeholderAdapter;
     private ErrorAdapter errorAdapter;
@@ -123,14 +123,13 @@ public class PaginatedRecyclerView extends RecyclerView {
         return pagination;
     }
 
-    public void setPagination(@Nullable Pagination pagination) {
+    public void setPagination(@Nullable final Pagination pagination) {
         if (getLayoutManager() == null) {
             throw new IllegalStateException("LayoutManager must be initialized");
         }
         if (getAdapter() == null) {
             throw new IllegalStateException("Adapter must be initialized");
         }
-        this.pagination = pagination;
         if (pagination != null) {
             // Trigger initial check since adapter might not have any items initially so no scrolling events upon
             // RecyclerView (that triggers check) will occur
@@ -142,70 +141,66 @@ public class PaginatedRecyclerView extends RecyclerView {
             paginatedAdapter = new PaginatedAdapter(getAdapter());
             setAdapter(paginatedAdapter);
 
-            pagination.setOnCompleted(new Runnable() {
+            pagination.onCompleted = new Runnable() {
                 @Override
                 public void run() {
-                    paginatedAdapter.updateState(PaginationState.COMPLETE);
+                    paginatedAdapter.notifyStateChanged(PaginationState.COMPLETE);
                 }
-            });
-            pagination.setOnError(new Runnable() {
+            };
+            pagination.onError = new Runnable() {
                 @Override
                 public void run() {
-                    paginatedAdapter.updateState(PaginationState.ERROR);
+                    paginatedAdapter.notifyStateChanged(PaginationState.ERROR);
                 }
-            });
+            };
 
             // For GridLayoutManager use separate/customisable span lookup for loading row
             if (getLayoutManager() instanceof GridLayoutManager) {
-                final int spanCount = ((GridLayoutManager) getLayoutManager()).getSpanCount();
-                spanSizeLookup = new PaginatedSpanSizeLookup(
-                    ((GridLayoutManager) getLayoutManager()).getSpanSizeLookup(),
-                    new GridLayoutManager.SpanSizeLookup() {
-                        @Override
-                        public int getSpanSize(int position) {
-                            return spanCount;
-                        }
-                    },
-                    paginatedAdapter
-                );
-                ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(spanSizeLookup);
+                final GridLayoutManager lm = (GridLayoutManager) getLayoutManager();
+                gridSpanSizeLookup = new PaginatedSpanSizeLookup(lm.getSpanSizeLookup(),
+                    lm.getSpanCount(), paginatedAdapter);
+                ((GridLayoutManager) getLayoutManager()).setSpanSizeLookup(gridSpanSizeLookup);
             }
         } else {
             removeOnScrollListener(onScrollListener);
             if (getAdapter() instanceof PaginatedAdapter) {
-                final PaginatedAdapter paginatedAdapter =
-                    (PaginatedAdapter) getAdapter();
+                final PaginatedAdapter paginatedAdapter = (PaginatedAdapter) getAdapter();
                 final Adapter originalAdapter = paginatedAdapter.originalAdapter;
                 originalAdapter.unregisterAdapterDataObserver(observer);
                 setAdapter(originalAdapter);
             }
-            if (getLayoutManager() instanceof GridLayoutManager && spanSizeLookup != null) {
+            if (getLayoutManager() instanceof GridLayoutManager && gridSpanSizeLookup != null) {
                 ((GridLayoutManager) getLayoutManager())
-                    .setSpanSizeLookup(spanSizeLookup.originalLookup);
+                    .setSpanSizeLookup(gridSpanSizeLookup.originalLookup);
             }
             paginatedAdapter = null;
-            spanSizeLookup = null;
+            gridSpanSizeLookup = null;
         }
+        this.pagination = pagination;
     }
 
-    @Nullable
+    @NonNull
     public PlaceholderAdapter getPlaceholderAdapter() {
-        return placeholderAdapter;
+        return placeholderAdapter != null
+            ? placeholderAdapter
+            : PlaceholderAdapter.DEFAULT;
     }
 
-    public void setPlaceholderAdapter(@Nullable PlaceholderAdapter adapter) {
+    public void setPlaceholderAdapter(@NonNull PlaceholderAdapter adapter) {
         if (placeholderAdapter != adapter) {
             placeholderAdapter = adapter;
             forceResetPagination();
         }
     }
 
-    @Nullable
+    @NonNull
     public ErrorAdapter getErrorAdapter() {
-        return errorAdapter;
+        return errorAdapter != null
+            ? errorAdapter
+            : ErrorAdapter.DEFAULT;
     }
 
-    public void setErrorAdapter(@Nullable ErrorAdapter adapter) {
+    public void setErrorAdapter(@NonNull ErrorAdapter adapter) {
         if (errorAdapter != adapter) {
             errorAdapter = adapter;
             forceResetPagination();
@@ -312,8 +307,8 @@ public class PaginatedRecyclerView extends RecyclerView {
     public static abstract class Pagination {
         private int page = getPageStart();
         private PaginationState state;
-        private Runnable onCompleted;
-        private Runnable onError;
+        Runnable onCompleted;
+        Runnable onError;
 
         /**
          * Returns the initial page of which pagination should start to.
@@ -324,20 +319,14 @@ public class PaginatedRecyclerView extends RecyclerView {
 
         /**
          * Where the logic of data population should be.
+         *
+         * @param page current page
          */
-        public abstract void onPaginate(int page);
+        public abstract void onNextPage(int page);
 
         void paginate() {
             state = PaginationState.LOADING;
-            onPaginate(page);
-        }
-
-        void setOnCompleted(Runnable onCompleted) {
-            this.onCompleted = onCompleted;
-        }
-
-        void setOnError(Runnable onError) {
-            this.onError = onError;
+            onNextPage(page);
         }
 
         /**

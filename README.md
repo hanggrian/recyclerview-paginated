@@ -1,10 +1,10 @@
-PaginatedRecyclerView
-=====================
 [![bintray](https://img.shields.io/badge/bintray-recyclerview-brightgreen.svg)](https://bintray.com/hendraanggrian/recyclerview)
 [![download](https://api.bintray.com/packages/hendraanggrian/recyclerview/recyclerview-paginated/images/download.svg)](https://bintray.com/hendraanggrian/recyclerview/recyclerview-paginated/_latestVersion)
 [![build](https://travis-ci.com/hendraanggrian/recyclerview-paginated.svg)](https://travis-ci.com/hendraanggrian/recyclerview-paginated)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
+Paginated RecyclerView
+======================
 ![demo_list][demo_list] ![demo_grid][demo_grid]
 
 Customizable pagination in Android RecyclerView. Some of the features are:
@@ -49,7 +49,7 @@ public class PostPagination extends PaginatedRecyclerView.Pagination {
     }
 
     @Override
-    public void onPaginate(int page) {
+    public void onNextPage(int page) {
         if (loadItemSuccess) {
             populateItems(); // add items to adapter
             notifyLoadingCompleted();

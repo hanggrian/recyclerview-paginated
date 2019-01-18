@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         adapter = PostAdapter(list)
         recyclerView.adapter = adapter
         recyclerView.pagination = object : PaginatedRecyclerView.Pagination() {
-            override fun onPaginate(page: Int) {
+            override fun onNextPage(page: Int) {
                 disposables.add(TypicodeServices.create()
                     .posts(page)
                     .subscribeOn(Schedulers.io())

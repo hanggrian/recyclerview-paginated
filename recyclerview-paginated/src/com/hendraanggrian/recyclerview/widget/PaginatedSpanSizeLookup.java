@@ -10,11 +10,16 @@ final class PaginatedSpanSizeLookup extends GridLayoutManager.SpanSizeLookup {
 
     PaginatedSpanSizeLookup(
         GridLayoutManager.SpanSizeLookup originalLookup,
-        GridLayoutManager.SpanSizeLookup fakeLookup,
+        final int spanCount,
         PaginatedAdapter adapter
     ) {
         this.originalLookup = originalLookup;
-        this.fakeLookup = fakeLookup;
+        this.fakeLookup = new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                return spanCount;
+            }
+        };
         this.adapter = adapter;
     }
 

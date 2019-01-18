@@ -2,7 +2,7 @@
 <resources>
     <declare-styleable name="PaginatedRecyclerView">
         <!--
-        Set the offset from the end of the list at which onPaginate event needs to be triggered, default is 5.
+        Set the offset from the end of the list at which onNextPage event needs to be triggered, default is 5.
         Follows convention of `AutoCompleteTextView.completionThreshold`.
         -->
         <attr name="paginationThreshold" format="integer" />
